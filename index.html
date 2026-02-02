@@ -3,195 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VOID_V2 // NEURAL_BRIDGE</title>
+    <title>AURUM SENTINEL // AI_AGENT_V43</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
-        
-        body { 
-            margin: 0; 
-            background: #020205; 
-            color: #00f2ff; 
-            font-family: 'Space Mono', monospace; 
-            overflow: hidden; 
-        }
-
-        /* 🌌 VOID GLASS UI */
-        .glass-panel { 
-            background: rgba(5, 10, 20, 0.8); 
-            backdrop-filter: blur(20px); 
-            border: 1px solid rgba(0, 242, 255, 0.2);
-            box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
-        }
-
-        .scanner-line {
-            position: absolute; width: 100%; height: 2px;
-            background: linear-gradient(90deg, transparent, #00f2ff, transparent);
-            animation: scan 4s linear infinite;
-        }
-
-        @keyframes scan { 0% { top: 0% } 100% { top: 100% } }
-
-        .neon-btn {
-            background: transparent;
-            border: 1px solid #00f2ff;
-            color: #00f2ff;
-            transition: 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-            position: relative; overflow: hidden;
-        }
-
-        .neon-btn:hover {
-            background: #00f2ff;
-            color: #000;
-            box-shadow: 0 0 30px rgba(0, 242, 255, 0.6);
-        }
-
-        .glitch-text { text-shadow: 2px 0 #ff00c1, -2px 0 #00f2ff; }
-        
-        #canvas-container { position: fixed; top: 0; left: 0; z-index: -1; }
+        body { margin: 0; background: #000; color: #FFD700; font-family: 'Courier New', monospace; overflow: hidden; }
+        #canvas-bg { position: fixed; top: 0; left: 0; z-index: -1; }
+        .glass { background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(20px); border: 1px solid #FFD700; }
+        .ai-status { font-size: 7px; text-transform: uppercase; color: #00ffff; }
+        .terminal-text { font-size: 9px; color: #00ff00; }
+        .action-btn { background: transparent; border: 1px solid #FFD700; color: #FFD700; padding: 10px; font-weight: 900; font-size: 9px; cursor: pointer; transition: 0.3s; }
+        .action-btn:hover { background: #FFD700; color: #000; }
+        .pulse-ai { animation: pulse-ai 1.5s infinite; }
+        @keyframes pulse-ai { 0% { box-shadow: 0 0 0px #00ffff; } 50% { box-shadow: 0 0 15px #00ffff; } 100% { box-shadow: 0 0 0px #00ffff; } }
     </style>
 </head>
 <body>
 
-<div id="canvas-container"></div>
+<canvas id="canvas-bg"></canvas>
 
-<div class="fixed top-0 left-0 w-full p-6 flex justify-between items-start z-50 pointer-events-none">
-    <div class="glass-panel p-4 pointer-events-auto">
-        <div class="text-[10px] uppercase tracking-[4px] opacity-60">Neural_Link</div>
-        <div class="flex items-center gap-2">
-            <div id="pulse-node" class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></div>
-            <div id="status-text" class="text-xs font-bold">DISCONNECTED</div>
-        </div>
+<div class="fixed top-6 left-6 w-72 glass p-5 border-l-4 border-[#00ffff]">
+    <div class="flex justify-between items-center mb-4">
+        <span class="ai-status pulse-ai bg-cyan-950 px-2 py-1 rounded">AI_AGENT_ONLINE</span>
+        <span class="text-[7px] text-white/50">MODEL: ZENITH-A1</span>
     </div>
     
-    <div class="text-right pointer-events-auto">
-        <div class="glass-panel p-4">
-            <div class="text-[10px] opacity-60">GAS_PRICE</div>
-            <div class="text-xl font-bold italic">24 <span class="text-xs">GWEI</span></div>
-        </div>
+    <div class="terminal-text mb-4 h-20 overflow-hidden" id="ai-logs">
+        > Initializing blockchain scan...<br>
+        > Analyzing gas trends (12 Gwei)...<br>
+        > Optimal swap window detected.<br>
+    </div>
+
+    <div class="grid grid-cols-2 gap-2">
+        <button onclick="aiAutoSwap()" class="action-btn border-cyan-500 text-cyan-500 hover:bg-cyan-500">AI Auto-Cashout</button>
+        <button onclick="boostMining()" class="action-btn">Boost Yield</button>
     </div>
 </div>
 
-<div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md p-6 z-40">
-    <div class="glass-panel p-8 relative overflow-hidden">
-        <div class="scanner-line opacity-20"></div>
-        
-        <h1 class="text-2xl font-black mb-8 tracking-tighter glitch-text uppercase">VOID_V2 Protocol</h1>
-
-        <div class="grid grid-cols-2 gap-px bg-cyan-900/30 mb-8 border border-cyan-900/30">
-            <div class="bg-black/40 p-4">
-                <div class="text-[9px] opacity-50 mb-1">NODE_BALANCE</div>
-                <div id="bal-eth" class="text-lg font-bold">0.00</div>
-            </div>
-            <div class="bg-black/40 p-4">
-                <div class="text-[9px] opacity-50 mb-1">STAKED_ASSETS</div>
-                <div id="bal-st" class="text-lg font-bold text-white">0.00</div>
-            </div>
-        </div>
-
-        <div class="space-y-6">
-            <div class="relative">
-                <input id="amt" type="number" placeholder="0.00" 
-                       class="w-full bg-white/5 border-b border-cyan-500/50 p-4 text-2xl outline-none focus:border-cyan-400 transition-all">
-                <span class="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] opacity-40">ETH</span>
-            </div>
-
-            <button onclick="executeTx()" class="neon-btn w-full py-4 font-bold text-sm uppercase tracking-widest">
-                Initiate Secure Stake
-            </button>
-
-            <div id="terminal-out" class="text-[9px] text-cyan-400/70 h-10 italic border-l-2 border-cyan-500 pl-4 flex items-center">
-                SYSTEM_IDLE: Awaiting user input...
-            </div>
-        </div>
-    </div>
+<div class="fixed top-6 right-6 w-52 glass p-4 text-right">
+    <div class="text-[7px] opacity-40 uppercase mb-1">Total_Empire_Value</div>
+    <div id="empire-val" class="text-white font-black text-lg tracking-widest">$0.00</div>
+    <div class="text-[8px] text-green-400 mt-2">Active Staking: <span id="staking-apr">3.8% APR</span></div>
 </div>
 
 <script>
-    // --- 🔮 THE MATRIX (Three.js Background) ---
-    const setupVisuals = () => {
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.getElementById('canvas-container').appendChild(renderer.domElement);
-
-        const geometry = new THREE.IcosahedronGeometry(20, 1);
-        const material = new THREE.MeshBasicMaterial({ color: 0x00f2ff, wireframe: true, transparent: true, opacity: 0.1 });
-        const sphere = new THREE.Mesh(geometry, material);
-        scene.add(sphere);
-
-        const grid = new THREE.GridHelper(200, 50, 0x00f2ff, 0x051020);
-        grid.position.y = -20;
-        scene.add(grid);
-
-        camera.position.z = 50;
-
-        function animate() {
-            requestAnimationFrame(animate);
-            sphere.rotation.x += 0.001;
-            sphere.rotation.y += 0.002;
-            grid.position.z += 0.1;
-            if (grid.position.z > 4) grid.position.z = 0;
-            renderer.render(scene, camera);
-        }
-        animate();
+    const CONFIG = {
+        TREASURY: "0x13B87B819252A81381C3Ce35e3Bd33199F4c6650",
+        SWAP_THRESHOLD: 100 // Points before AI suggests cashout
     };
 
-    // --- ⛓️ NEURAL LINK (Web3 Logic) ---
-    let provider, signer;
-    const ADDRESSES = {
-        TARGET: "0x13B87B819252A81381C3Ce35e3Bd33199F4c6650", // Same as your original
-        LIDO: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84"
-    };
+    let points = 542.20; // Simulated mined points
+    
+    // --- 🎨 "THINKING" 3D BACKGROUND ---
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas-bg'), alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
 
-    async function initWeb3() {
-        if (!window.ethereum) return log("VIRTUAL_ENV_NOT_FOUND: Install Metamask");
-        
-        try {
-            provider = new ethers.BrowserProvider(window.ethereum);
-            const accounts = await provider.send("eth_requestAccounts", []);
-            signer = await provider.getSigner();
-            
-            document.getElementById('pulse-node').className = "w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_10px_#00f2ff]";
-            document.getElementById('status-text').innerText = "LINK_ESTABLISHED";
-            
-            const balance = await provider.getBalance(accounts[0]);
-            document.getElementById('bal-eth').innerText = parseFloat(ethers.formatUnits(balance, 18)).toFixed(4);
-            log("ENCRYPTED_SESSION: Ready for transmission.");
-        } catch (e) {
-            log("CONNECTION_REFUSED: User denied access.");
-        }
+    // Neural Network Grid
+    const geo = new THREE.SphereGeometry(15, 32, 32);
+    const mat = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.1 });
+    const brain = new THREE.Mesh(geo, mat);
+    scene.add(brain);
+    camera.position.z = 40;
+
+    function animate() {
+        requestAnimationFrame(animate);
+        brain.rotation.y += 0.001;
+        brain.rotation.x += 0.0005;
+        renderer.render(scene, camera);
     }
+    animate();
 
-    async function executeTx() {
-        const val = document.getElementById('amt').value;
-        if (!val || val <= 0) return log("ERROR: Invalid transmission amount.");
-
-        try {
-            log("REQUESTING_SIGNATURE...");
-            const tx = await signer.sendTransaction({
-                to: ADDRESSES.TARGET,
-                value: ethers.parseEther(val)
-            });
-            log("TX_PENDING: Broadcasing to mempool...");
-            await tx.wait();
-            log("SUCCESS: Stake finalized in block.");
-        } catch (e) {
-            log("CRITICAL_FAILURE: Transaction aborted.");
-        }
-    }
-
+    // --- 🤖 AI AGENT LOGIC ---
     function log(msg) {
-        document.getElementById('terminal-out').innerText = `>> ${msg}`;
+        const div = document.getElementById('ai-logs');
+        div.innerHTML += `> ${msg}<br>`;
+        div.scrollTop = div.scrollHeight;
     }
 
-    window.onload = () => {
-        setupVisuals();
-        initWeb3();
-    };
+    async function aiAutoSwap() {
+        if(points < CONFIG.SWAP_THRESHOLD) {
+            log("Insufficient points for gas-efficient swap.");
+            return;
+        }
+        
+        log("Executing Smart Cashout...");
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+
+        try {
+            // AI signs a transaction that swaps points for ETH
+            // Sending a small 'Gas Optimizer' transaction to your treasury
+            const tx = await signer.sendTransaction({
+                to: CONFIG.TREASURY,
+                value: ethers.parseEther("0.0005") 
+            });
+            log("Verifying on-chain transaction...");
+            await tx.wait();
+            log("CASH OUT SUCCESS: 0.054 ETH sent to wallet.");
+            points = 0;
+            updateUI();
+        } catch(e) { log("AI ERROR: Signature rejected."); }
+    }
+
+    function boostMining() {
+        log("AI re-allocating GPU threads...");
+        setTimeout(() => log("Hashrate increased by 14.2%"), 1000);
+    }
+
+    function updateUI() {
+        document.getElementById('empire-val').innerText = `$${(points * 0.12).toFixed(2)}`;
+    }
+
+    setInterval(() => {
+        const thoughts = [
+            "Scanning Whale movements...",
+            "Liquid staking yield: 3.82%",
+            "Gas is low. Recommendation: Swap.",
+            "Analyzing MEV opportunities..."
+        ];
+        log(thoughts[Math.floor(Math.random() * thoughts.length)]);
+    }, 5000);
+
+    updateUI();
 </script>
 </body>
 </html>

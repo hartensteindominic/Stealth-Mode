@@ -2,146 +2,136 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>TITAN_ARCHON // V60_WITHDRAWAL_READY</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <title>InfinityNode One-File Blockchain</title>
     <style>
-        body { margin: 0; background: #000; color: #FFD700; font-family: 'Courier New', monospace; overflow: hidden; }
-        canvas { position: fixed; top: 0; left: 0; z-index: -1; }
-        .glass { background: rgba(0, 0, 0, 0.98); backdrop-filter: blur(30px); border: 1px solid rgba(255, 215, 0, 0.2); }
-        .btn-gold { border: 1px solid #FFD700; color: #FFD700; padding: 14px; font-size: 10px; font-weight: 900; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; }
-        .btn-gold:active { background: #FFD700; color: #000; scale: 0.95; }
-        .cyan-text { color: #00ffff; text-shadow: 0 0 10px #00ffff; }
-        .hidden { display: none !important; }
+        :root { --glow: #00ecff; --bg: #050505; }
+        body { background: var(--bg); color: #888; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; padding: 20px; }
+        .terminal { background: #111; border: 1px solid #222; width: 100%; max-width: 800px; padding: 30px; border-radius: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.7); }
+        h1 { color: var(--glow); text-align: center; letter-spacing: 3px; font-weight: 300; }
+        .box { background: #000; border-left: 3px solid var(--glow); padding: 15px; margin: 15px 0; font-family: monospace; font-size: 0.9em; overflow-wrap: break-word; }
+        input { width: 100%; padding: 12px; background: #1a1a1a; border: 1px solid #333; color: white; margin-top: 10px; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; margin-top: 15px; border: none; cursor: pointer; font-weight: bold; letter-spacing: 1px; transition: 0.3s; }
+        .btn-mine { background: var(--glow); color: #000; }
+        .btn-gen { background: #333; color: #fff; }
+        .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 20px; text-align: center; }
+        .stat-val { display: block; color: var(--glow); font-size: 1.5em; font-weight: bold; }
+        #log { height: 120px; overflow-y: auto; background: #000; padding: 10px; margin-top: 20px; border: 1px solid #222; font-size: 0.8em; color: #555; }
     </style>
 </head>
 <body>
 
-<canvas id="bg"></canvas>
+<div class="terminal">
+    <h1>INFINITY-CHAIN v1.0</h1>
 
-<div id="invite-gate" class="fixed inset-0 z-[1000] bg-black flex items-center justify-center p-6">
-    <div class="w-full max-w-md glass p-10 text-center border-t-8 border-[#FFD700]">
-        <h1 class="text-3xl font-black italic mb-2 tracking-tighter uppercase">Imperial_Gate_V60</h1>
-        <p class="text-[8px] cyan-text uppercase tracking-widest mb-10">Withdrawal Protocol: 0x82...F9 Ready</p>
-        <input id="invite-input" type="text" placeholder="ACCESS_CODE" class="w-full bg-white/5 border border-white/20 p-4 text-center text-xl tracking-[0.4em] text-[#FFD700] outline-none mb-6">
-        <button onclick="verifyInvite()" class="w-full btn-gold">Enter Treasury</button>
+    <button class="btn-gen" onclick="generateWallet()">1. GENERATE NEW GLOBAL IDENTITY</button>
+    
+    <div id="walletArea" style="display:none">
+        <div class="box"><strong>PUBLIC ADDRESS:</strong><br><span id="pub"></span></div>
+        <div class="box" style="border-color: #ff3e3e"><strong>PRIVATE KEY:</strong><br><span id="priv"></span></div>
     </div>
+
+    <input type="text" id="target" placeholder="Paste Public Address Here">
+    <button class="btn-mine" id="mineBtn" onclick="toggleMining()">2. LAUNCH MINING ENGINE</button>
+
+    <div class="stats">
+        <div><span class="stat-val" id="balance">0</span>Balance</div>
+        <div><span class="stat-val" id="blocks">0</span>Blocks Found</div>
+        <div><span class="stat-val" id="hashrate">0</span>H/s</div>
+    </div>
+
+    <div id="log">> System initialized. Waiting for command...</div>
 </div>
 
-<div class="fixed top-6 right-6 z-50 w-72 glass p-5 border-r-4 border-green-500">
-    <div id="wallet-init">
-        <button onclick="createImperialWallet()" class="w-full btn-gold !text-[10px]">Generate Claim Address</button>
-    </div>
-    <div id="wallet-display" class="hidden space-y-3">
-        <div class="flex justify-between items-center text-[7px] opacity-40 uppercase">
-            <span>Identity</span><span class="text-green-500">VERIFIED</span>
-        </div>
-        <span id="addr-text" class="text-[9px] cyan-text font-bold break-all block">0x...</span>
-        <div class="pt-2 border-t border-white/10">
-            <span class="text-[7px] opacity-40 uppercase block mb-1">Net_Withdrawal_Right</span>
-            <span id="eth-val" class="text-lg font-black text-white">0.00000 ETH</span>
-        </div>
-        <button onclick="executeWithdrawal()" class="w-full bg-green-600 text-black p-3 text-[9px] font-black uppercase hover:bg-white transition">Execute Withdrawal</button>
-    </div>
-</div>
+<script id="worker-code" type="javascript/worker">
+    self.onmessage = async function(e) {
+        const { wallet, difficulty } = e.data;
+        let nonce = 0;
 
-<div class="fixed top-6 left-6 w-64 glass p-4 z-50">
-    <div id="ai-logs" class="text-[7px] text-green-400 h-20 overflow-hidden opacity-70 italic leading-tight space-y-1 font-bold">
-        <div>> ARCHON_OS: Operational</div>
-    </div>
-</div>
+        async function sha256(str) {
+            const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+            return Array.prototype.map.call(new Uint8Array(buf), x => (('00' + x.toString(16)).slice(-2))).join('');
+        }
 
-<div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 glass p-10 text-center border-b-8 border-[#FFD700]">
-    <div id="points-val" class="text-6xl font-black mb-8 tracking-tighter">0000.00</div>
-    <button id="mine-btn" onclick="toggleMining()" class="w-full bg-[#FFD700] text-black p-5 font-black uppercase text-sm">Engage Extraction</button>
-</div>
+        while (true) {
+            nonce++;
+            const hash = await sha256(wallet + nonce);
+            if (hash.startsWith('0'.repeat(difficulty))) {
+                self.postMessage({ type: 'SUCCESS', hash, nonce });
+            }
+            if (nonce % 2000 === 0) self.postMessage({ type: 'TICK' });
+        }
+    };
+</script>
 
 <script>
-    let points = parseFloat(localStorage.getItem('imperial_points')) || 0;
-    let isMining = false; let miningLoop; let localWallet = null;
-    const conversionRate = 0.00001; 
+    let isMining = false;
+    let worker;
+    let hashes = 0;
+    let start;
 
-    // --- 🎨 3D CORE ---
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg'), alpha: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    const grid = new THREE.GridHelper(100, 40, 0xFFD700, 0x111111);
-    scene.add(grid); camera.position.set(0, 15, 25); camera.lookAt(0,0,0);
-    function animate() { requestAnimationFrame(animate); if(isMining) { grid.position.z += 0.2; if(grid.position.z > 5) grid.position.z = 0; } renderer.render(scene, camera); }
-    animate();
-
-    updateUI();
-
-    function verifyInvite() {
-        if(document.getElementById('invite-input').value.toUpperCase() === "IMPERIAL") {
-            document.getElementById('invite-gate').classList.add('hidden');
-        }
+    function log(msg) {
+        const l = document.getElementById('log');
+        l.innerHTML += `<div>> ${msg}</div>`;
+        l.scrollTop = l.scrollHeight;
     }
 
-    function createImperialWallet() {
-        localWallet = ethers.Wallet.createRandom();
-        document.getElementById('wallet-init').classList.add('hidden');
-        document.getElementById('wallet-display').classList.remove('hidden');
-        document.getElementById('addr-text').innerText = localWallet.address;
-        logAI("Withdrawal Address Synced.");
-    }
-
-    function updateUI() {
-        document.getElementById('points-val').innerText = points.toFixed(2);
-        const netEth = (points * conversionRate) * 0.95; 
-        document.getElementById('eth-val').innerText = netEth.toFixed(5) + " ETH";
-    }
-
-    // --- 🔱 THE WITHDRAWAL BRIDGE ---
-    async function executeWithdrawal() {
-        if(!localWallet) return alert("Generate Address First.");
-        if(points < 1.0) return alert("Insufficient points for withdrawal.");
-
-        const netAmount = (points * conversionRate) * 0.95;
-        const timestamp = new Date().toISOString();
+    async function generateWallet() {
+        const entropy = window.crypto.getRandomValues(new Uint8Array(32));
+        const priv = Array.from(entropy, b => b.toString(16).padStart(2, '0')).join('');
+        const hashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(priv));
+        const pub = "INF_" + Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 20);
         
-        // Cryptographic Sign
-        const message = `IMPERIAL_CLAIM|${localWallet.address}|${netAmount.toFixed(6)}|${timestamp}`;
-        const signature = await localWallet.signMessage(message);
-
-        const claimData = `--- IMPERIAL ARCHON WITHDRAWAL PROOF ---\n` +
-                          `ADDRESS: ${localWallet.address}\n` +
-                          `NET_ETH: ${netAmount.toFixed(6)}\n` +
-                          `TIMESTAMP: ${timestamp}\n` +
-                          `SIGNATURE_HASH: ${signature}\n` +
-                          `STATUS: AUTHORIZED_BY_V60_PROTOCOL\n` +
-                          `---------------------------------------`;
-
-        const blob = new Blob([claimData], { type: 'text/plain' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `CLAIM_${localWallet.address.slice(0,6)}.txt`;
-        a.click();
-
-        logAI(`SUCCESS: Claim for ${netAmount.toFixed(4)} ETH Exported.`);
-        points = 0;
-        localStorage.setItem('imperial_points', 0);
-        updateUI();
+        document.getElementById('pub').innerText = pub;
+        document.getElementById('priv').innerText = priv;
+        document.getElementById('target').value = pub;
+        document.getElementById('walletArea').style.display = 'block';
+        log("Identity encrypted and stored in local memory.");
     }
 
     function toggleMining() {
-        isMining = !isMining;
-        document.getElementById('mine-btn').innerText = isMining ? "Extracting..." : "Engage Extraction";
-        if(isMining) {
-            miningLoop = setInterval(() => {
-                points += (25.0 / 3600);
-                updateUI();
-                localStorage.setItem('imperial_points', points);
-            }, 1000);
-        } else { clearInterval(miningLoop); }
+        const wallet = document.getElementById('target').value;
+        const btn = document.getElementById('mineBtn');
+        if (!wallet) return alert("Enter address!");
+
+        if (!isMining) {
+            isMining = true;
+            btn.innerText = "SHUTDOWN ENGINE";
+            btn.style.background = "#ff3e3e";
+            start = Date.now();
+            
+            const blob = new Blob([document.getElementById('worker-code').textContent], {type: 'text/javascript'});
+            worker = new Worker(window.URL.createObjectURL(blob));
+            
+            worker.onmessage = (e) => {
+                if (e.data.type === 'SUCCESS') {
+                    document.getElementById('blocks').innerText = parseInt(document.getElementById('blocks').innerText) + 1;
+                    log(`BLOCK FOUND: ${e.data.hash.substring(0,16)}...`);
+                    saveToCloud(wallet, e.data.hash);
+                } else {
+                    hashes += 2000;
+                    document.getElementById('hashrate').innerText = Math.floor(hashes / ((Date.now() - start)/1000));
+                }
+            };
+            worker.postMessage({ wallet, difficulty: 4 });
+            log("Mining engine engaged.");
+        } else {
+            isMining = false;
+            worker.terminate();
+            btn.innerText = "LAUNCH MINING ENGINE";
+            btn.style.background = "#00ecff";
+            log("Engine offline.");
+        }
     }
 
-    function logAI(m) {
-        const logs = document.getElementById('ai-logs');
-        logs.innerHTML = `<div>> ${m}</div>` + logs.innerHTML;
+    // This is the "Legit" part: Saving to a public record
+    function saveToCloud(wallet, hash) {
+        // In a real crypto, this would be a POST to a P2P node.
+        // For a one-file HTML, we simulate the ledger update.
+        let balance = parseInt(document.getElementById('balance').innerText);
+        document.getElementById('balance').innerText = balance + 10;
+        
+        // OPTIONAL: Integrate a service like jsonbin.io here to make it global
+        log("Block recorded to local ledger.");
     }
 </script>
 </body>

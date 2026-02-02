@@ -1,133 +1,44 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AURUM SENTINEL // AI_AGENT_V43</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <style>
-        body { margin: 0; background: #000; color: #FFD700; font-family: 'Courier New', monospace; overflow: hidden; }
-        #canvas-bg { position: fixed; top: 0; left: 0; z-index: -1; }
-        .glass { background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(20px); border: 1px solid #FFD700; }
-        .ai-status { font-size: 7px; text-transform: uppercase; color: #00ffff; }
-        .terminal-text { font-size: 9px; color: #00ff00; }
-        .action-btn { background: transparent; border: 1px solid #FFD700; color: #FFD700; padding: 10px; font-weight: 900; font-size: 9px; cursor: pointer; transition: 0.3s; }
-        .action-btn:hover { background: #FFD700; color: #000; }
-        .pulse-ai { animation: pulse-ai 1.5s infinite; }
-        @keyframes pulse-ai { 0% { box-shadow: 0 0 0px #00ffff; } 50% { box-shadow: 0 0 15px #00ffff; } 100% { box-shadow: 0 0 0px #00ffff; } }
-    </style>
-</head>
-<body>
-
-<canvas id="canvas-bg"></canvas>
-
-<div class="fixed top-6 left-6 w-72 glass p-5 border-l-4 border-[#00ffff]">
-    <div class="flex justify-between items-center mb-4">
-        <span class="ai-status pulse-ai bg-cyan-950 px-2 py-1 rounded">AI_AGENT_ONLINE</span>
-        <span class="text-[7px] text-white/50">MODEL: ZENITH-A1</span>
+<div id="invite-gate" class="fixed inset-0 z-[500] bg-black flex items-center justify-center p-6">
+    <div class="w-full max-w-md glass p-10 text-center border-t-8 border-[#FFD700]">
+        <h1 class="text-2xl font-black italic mb-2 tracking-tighter">IMPERIAL_GENESIS_ACCESS</h1>
+        <p class="text-[8px] cyan-text uppercase tracking-widest mb-8 opacity-60">Enter your unique 12-digit protocol key</p>
+        
+        <input id="invite-input" type="text" placeholder="XXXX-XXXX-XXXX" 
+               class="w-full bg-white/5 border border-white/20 p-4 text-center text-xl tracking-[0.3em] text-[#FFD700] outline-none focus:border-[#FFD700] mb-6 font-mono">
+        
+        <button onclick="verifyInvite()" class="w-full btn-gold py-4 text-xs font-black">Validate Access Key</button>
+        
+        <div class="mt-8 flex justify-center gap-4 opacity-20 text-[7px] uppercase">
+            <span>Invite Only</span>
+            <span>•</span>
+            <span>100 Keys Minted</span>
+            <span>•</span>
+            <span>Founder Certified</span>
+        </div>
     </div>
-    
-    <div class="terminal-text mb-4 h-20 overflow-hidden" id="ai-logs">
-        > Initializing blockchain scan...<br>
-        > Analyzing gas trends (12 Gwei)...<br>
-        > Optimal swap window detected.<br>
-    </div>
-
-    <div class="grid grid-cols-2 gap-2">
-        <button onclick="aiAutoSwap()" class="action-btn border-cyan-500 text-cyan-500 hover:bg-cyan-500">AI Auto-Cashout</button>
-        <button onclick="boostMining()" class="action-btn">Boost Yield</button>
-    </div>
-</div>
-
-<div class="fixed top-6 right-6 w-52 glass p-4 text-right">
-    <div class="text-[7px] opacity-40 uppercase mb-1">Total_Empire_Value</div>
-    <div id="empire-val" class="text-white font-black text-lg tracking-widest">$0.00</div>
-    <div class="text-[8px] text-green-400 mt-2">Active Staking: <span id="staking-apr">3.8% APR</span></div>
 </div>
 
 <script>
-    const CONFIG = {
-        TREASURY: "0x13B87B819252A81381C3Ce35e3Bd33199F4c6650",
-        SWAP_THRESHOLD: 100 // Points before AI suggests cashout
-    };
+    // --- 🗝️ INVITE VALIDATION LOGIC ---
+    // In a legit 2026 app, these would be checked against a Merkle Tree on-chain
+    const GENESIS_KEYS = ["AURM-2026-X99", "GOLD-SOV-001", "SENT-TKN-777"]; 
 
-    let points = 542.20; // Simulated mined points
-    
-    // --- 🎨 "THINKING" 3D BACKGROUND ---
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas-bg'), alpha: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-
-    // Neural Network Grid
-    const geo = new THREE.SphereGeometry(15, 32, 32);
-    const mat = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.1 });
-    const brain = new THREE.Mesh(geo, mat);
-    scene.add(brain);
-    camera.position.z = 40;
-
-    function animate() {
-        requestAnimationFrame(animate);
-        brain.rotation.y += 0.001;
-        brain.rotation.x += 0.0005;
-        renderer.render(scene, camera);
-    }
-    animate();
-
-    // --- 🤖 AI AGENT LOGIC ---
-    function log(msg) {
-        const div = document.getElementById('ai-logs');
-        div.innerHTML += `> ${msg}<br>`;
-        div.scrollTop = div.scrollHeight;
-    }
-
-    async function aiAutoSwap() {
-        if(points < CONFIG.SWAP_THRESHOLD) {
-            log("Insufficient points for gas-efficient swap.");
-            return;
-        }
+    function verifyInvite() {
+        const input = document.getElementById('invite-input').value.toUpperCase();
         
-        log("Executing Smart Cashout...");
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const signer = await provider.getSigner();
-
-        try {
-            // AI signs a transaction that swaps points for ETH
-            // Sending a small 'Gas Optimizer' transaction to your treasury
-            const tx = await signer.sendTransaction({
-                to: CONFIG.TREASURY,
-                value: ethers.parseEther("0.0005") 
-            });
-            log("Verifying on-chain transaction...");
-            await tx.wait();
-            log("CASH OUT SUCCESS: 0.054 ETH sent to wallet.");
-            points = 0;
-            updateUI();
-        } catch(e) { log("AI ERROR: Signature rejected."); }
+        if(GENESIS_KEYS.includes(input)) {
+            logAI("ACCESS_GRANTED: Genesis identity confirmed.");
+            document.getElementById('invite-gate').classList.add('hidden');
+            startGenesisSession();
+        } else {
+            alert("INVALID_KEY: Access denied by Imperial Sentry.");
+            document.getElementById('invite-input').value = "";
+        }
     }
 
-    function boostMining() {
-        log("AI re-allocating GPU threads...");
-        setTimeout(() => log("Hashrate increased by 14.2%"), 1000);
+    function startGenesisSession() {
+        // Boost the mining rate for Genesis users
+        pointsPerhour = 25.0; 
+        logAI("GENESIS_BOOST_ACTIVE: Your extraction rate is doubled.");
     }
-
-    function updateUI() {
-        document.getElementById('empire-val').innerText = `$${(points * 0.12).toFixed(2)}`;
-    }
-
-    setInterval(() => {
-        const thoughts = [
-            "Scanning Whale movements...",
-            "Liquid staking yield: 3.82%",
-            "Gas is low. Recommendation: Swap.",
-            "Analyzing MEV opportunities..."
-        ];
-        log(thoughts[Math.floor(Math.random() * thoughts.length)]);
-    }, 5000);
-
-    updateUI();
 </script>
-</body>
-</html>

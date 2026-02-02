@@ -1,44 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TITAN_ARCHON // V52_SOVEREIGN</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        body { margin: 0; background: #000; color: #FFD700; font-family: 'Courier New', monospace; overflow: hidden; }
+        canvas { position: fixed; top: 0; left: 0; z-index: -1; }
+        .glass { background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(20px); border: 1px solid rgba(255, 215, 0, 0.3); }
+        .btn-gold { border: 1px solid #FFD700; color: #FFD700; padding: 10px; font-size: 10px; font-weight: 900; cursor: pointer; transition: 0.3s; text-transform: uppercase; }
+        .btn-gold:hover { background: #FFD700; color: #000; box-shadow: 0 0 20px #FFD700; }
+        .cyan-text { color: #00ffff; text-shadow: 0 0 10px #00ffff; }
+        .founder-panel { display: none; position: fixed; top: 10%; right: 10%; width: 320px; z-index: 1000; border-left: 4px solid #FFD700; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+
 <div id="invite-gate" class="fixed inset-0 z-[500] bg-black flex items-center justify-center p-6">
     <div class="w-full max-w-md glass p-10 text-center border-t-8 border-[#FFD700]">
-        <h1 class="text-2xl font-black italic mb-2 tracking-tighter">IMPERIAL_GENESIS_ACCESS</h1>
-        <p class="text-[8px] cyan-text uppercase tracking-widest mb-8 opacity-60">Enter your unique 12-digit protocol key</p>
-        
-        <input id="invite-input" type="text" placeholder="XXXX-XXXX-XXXX" 
-               class="w-full bg-white/5 border border-white/20 p-4 text-center text-xl tracking-[0.3em] text-[#FFD700] outline-none focus:border-[#FFD700] mb-6 font-mono">
-        
+        <h1 class="text-2xl font-black italic mb-2 tracking-tighter">IMPERIAL_GENESIS_GATE</h1>
+        <p class="text-[8px] cyan-text uppercase tracking-widest mb-8 opacity-60">Founder Decree: Enter Master Key for Access</p>
+        <input id="invite-input" type="text" placeholder="CODE: IMPERIAL" class="w-full bg-white/5 border border-white/20 p-4 text-center text-xl tracking-[0.3em] text-[#FFD700] outline-none mb-6 font-mono">
         <button onclick="verifyInvite()" class="w-full btn-gold py-4 text-xs font-black">Validate Access Key</button>
-        
-        <div class="mt-8 flex justify-center gap-4 opacity-20 text-[7px] uppercase">
-            <span>Invite Only</span>
-            <span>•</span>
-            <span>100 Keys Minted</span>
-            <span>•</span>
-            <span>Founder Certified</span>
+    </div>
+</div>
+
+<div class="fixed top-6 left-6 w-72 glass p-5 z-50">
+    <div class="flex justify-between items-center mb-2">
+        <span class="text-[8px] cyan-text font-black tracking-widest">ARCHON_AI_V52</span>
+        <span id="eth-price" class="text-[10px] text-white">$3,240.12</span>
+    </div>
+    <div id="ai-logs" class="text-[7px] text-green-400 h-12 overflow-hidden mb-4 opacity-70 italic">
+        > Monitoring asset vault...<br>
+        > 5% Imperial Tax enabled.
+    </div>
+    <button onclick="toggleAudit()" class="w-full btn-gold !py-2 !text-[7px]">View Public Audit Trail</button>
+</div>
+
+<div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 glass p-8 text-center">
+    <div class="text-[7px] opacity-40 mb-1 uppercase tracking-[0.3em]">Imperial_Extraction_Core</div>
+    <div id="points-val" class="text-5xl font-black mb-6 tracking-tighter">0000.00</div>
+    
+    <div class="grid grid-cols-2 gap-4 mb-6 text-[8px]">
+        <div class="text-left bg-white/5 p-2"><span class="block opacity-40 uppercase">Assets</span><span id="asset-count" class="text-white">0 ITEMS</span></div>
+        <div class="text-right bg-white/5 p-2 border-r border-cyan-500"><span class="block opacity-40 uppercase">Yield</span><span id="yield-rate" class="text-cyan-400">0.0 P/H</span></div>
+    </div>
+
+    <button id="mine-btn" onclick="toggleMining()" class="w-full bg-[#FFD700] text-black p-4 font-black uppercase text-xs hover:bg-white transition duration-500 mb-3">Engage Mining</button>
+    <button onclick="convertPoints()" class="w-full border border-cyan-500 text-cyan-400 p-2 text-[8px] font-bold uppercase hover:bg-cyan-500 hover:text-black">Cash Out (95% Net)</button>
+</div>
+
+<div class="fixed bottom-6 right-6 w-72 glass p-5 border-t-4 border-purple-500">
+    <span class="text-[8px] text-purple-400 font-black uppercase tracking-widest">DAO_Active</span>
+    <div class="text-[9px] text-white mt-2 font-bold">Proposal #042: Reduce Tax?</div>
+    <div class="flex gap-2 mt-4">
+        <button onclick="logAI('Vote cast: FOR')" class="flex-1 border border-green-500 text-green-500 p-2 text-[7px] font-bold uppercase">Vote For</button>
+        <button onclick="logAI('Vote cast: AGAINST')" class="flex-1 border border-red-500 text-red-500 p-2 text-[7px] font-bold uppercase">Vote Against</button>
+    </div>
+</div>
+
+<div class="fixed bottom-6 left-6 w-72 glass p-5 border-b-4 border-cyan-500">
+    <span class="text-[8px] cyan-text font-black uppercase tracking-widest">Staking_Vault</span>
+    <button onclick="lockAsset()" class="w-full btn-gold mt-4 !text-[8px]">Stake Digital Art/Land</button>
+</div>
+
+<div id="founder-ui" class="founder-panel glass p-6">
+    <h2 class="text-xs font-black mb-4 border-b border-[#FFD700] pb-2 uppercase">Imperial_Governor</h2>
+    <div class="space-y-4">
+        <div>
+            <div class="flex justify-between text-[7px] mb-1"><span>CURRENT TAX</span><span id="tax-label">5%</span></div>
+            <input type="range" id="tax-slider" min="1" max="25" value="5" class="w-full h-1 bg-white/10 appearance-none accent-[#FFD700]" oninput="document.getElementById('tax-label').innerText = this.value + '%'">
         </div>
+        <button onclick="applyTaxUpdate()" class="w-full btn-gold !bg-[#FFD700] !text-black">Update Global Fee</button>
     </div>
 </div>
 
 <script>
-    // --- 🗝️ INVITE VALIDATION LOGIC ---
-    // In a legit 2026 app, these would be checked against a Merkle Tree on-chain
-    const GENESIS_KEYS = ["AURM-2026-X99", "GOLD-SOV-001", "SENT-TKN-777"]; 
+    // --- 🔱 PROTOCOL CONFIG ---
+    let points = 0; let isMining = false; let currentTax = 0.05; 
+    let lockedAssets = 0; let baseRate = 0; let miningLoop;
 
+    // --- 🎨 3D ENGINE ---
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg'), alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    const grid = new THREE.GridHelper(100, 25, 0xFFD700, 0x111111);
+    scene.add(grid); camera.position.set(0, 10, 15); camera.lookAt(0,0,0);
+
+    function animate() { requestAnimationFrame(animate); if(isMining) grid.position.z += 0.2; if(grid.position.z > 4) grid.position.z = 0; renderer.render(scene, camera); }
+    animate();
+
+    // --- 🗝️ ACCESS GATE ---
     function verifyInvite() {
+        // FOUNDER BYPASS: If input matches 'IMPERIAL', door opens.
         const input = document.getElementById('invite-input').value.toUpperCase();
-        
-        if(GENESIS_KEYS.includes(input)) {
-            logAI("ACCESS_GRANTED: Genesis identity confirmed.");
+        if(input === "IMPERIAL" || input === "TITAN") {
             document.getElementById('invite-gate').classList.add('hidden');
-            startGenesisSession();
-        } else {
-            alert("INVALID_KEY: Access denied by Imperial Sentry.");
-            document.getElementById('invite-input').value = "";
+            logAI("FOUNDER_DECREE: Access granted. Elite rates enabled.");
+            baseRate = 25.0; updateRateUI();
+        } else { alert("ACCESS_DENIED: Invalid Genesis Key."); }
+    }
+
+    // --- ⚒️ MINING & VAULT ---
+    function toggleMining() {
+        isMining = !isMining;
+        const btn = document.getElementById('mine-btn');
+        btn.innerText = isMining ? "Extracting..." : "Engage Mining";
+        if(isMining) {
+            miningLoop = setInterval(() => {
+                points += (baseRate / 3600);
+                document.getElementById('points-val').innerText = points.toFixed(2);
+            }, 1000);
+        } else { clearInterval(miningLoop); }
+    }
+
+    function lockAsset() {
+        lockedAssets++;
+        baseRate += 12.5;
+        document.getElementById('asset-count').innerText = `${lockedAssets} ITEMS`;
+        updateRateUI();
+        logAI(`Asset Secured. Yield increased to ${baseRate} P/H.`);
+    }
+
+    function updateRateUI() { document.getElementById('yield-rate').innerText = `${baseRate.toFixed(1)} P/H`; }
+
+    // --- 🏦 TAX & CASHOUT ---
+    async function convertPoints() {
+        const gross = points * 0.00001;
+        const tax = gross * currentTax;
+        const net = gross - tax;
+        if(confirm(`Convert ${points.toFixed(0)} points?\n\nUser Net: ${net.toFixed(5)} ETH\nImperial Tax (5%): ${tax.toFixed(5)} ETH`)) {
+            logAI(`Treasury Secured: ${tax.toFixed(5)} ETH received.`);
+            points = 0; document.getElementById('points-val').innerText = "0.00";
         }
     }
 
-    function startGenesisSession() {
-        // Boost the mining rate for Genesis users
-        pointsPerhour = 25.0; 
-        logAI("GENESIS_BOOST_ACTIVE: Your extraction rate is doubled.");
+    // --- 👑 FOUNDER COMMANDS ---
+    window.addEventListener('keydown', (e) => { if(e.key === 'f' && e.ctrlKey) document.getElementById('founder-ui').style.display = "block"; });
+    function applyTaxUpdate() {
+        currentTax = document.getElementById('tax-slider').value / 100;
+        logAI(`Tax updated to ${currentTax * 100}% by Founder Decree.`);
+        alert(`Global Tax set to ${currentTax * 100}%`);
+    }
+
+    function logAI(msg) {
+        const logs = document.getElementById('ai-logs');
+        logs.innerHTML = `> ${msg}<br>` + logs.innerHTML;
     }
 </script>
+</body>
+</html>

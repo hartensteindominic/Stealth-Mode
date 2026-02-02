@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>TITAN_ARCHON // V58_WITHDRAWAL</title>
+    <title>TITAN_ARCHON // V60_WITHDRAWAL_READY</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         body { margin: 0; background: #000; color: #FFD700; font-family: 'Courier New', monospace; overflow: hidden; }
         canvas { position: fixed; top: 0; left: 0; z-index: -1; }
-        .glass { background: rgba(0, 0, 0, 0.98); backdrop-filter: blur(30px); border: 1px solid rgba(255, 215, 0, 0.3); }
-        .btn-gold { border: 1px solid #FFD700; color: #FFD700; padding: 14px; font-size: 11px; font-weight: 900; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; transition: 0.2s; }
-        .btn-gold:active { background: #FFD700; color: #000; scale: 0.98; }
+        .glass { background: rgba(0, 0, 0, 0.98); backdrop-filter: blur(30px); border: 1px solid rgba(255, 215, 0, 0.2); }
+        .btn-gold { border: 1px solid #FFD700; color: #FFD700; padding: 14px; font-size: 10px; font-weight: 900; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; }
+        .btn-gold:active { background: #FFD700; color: #000; scale: 0.95; }
         .cyan-text { color: #00ffff; text-shadow: 0 0 10px #00ffff; }
         .hidden { display: none !important; }
     </style>
@@ -23,38 +23,47 @@
 
 <div id="invite-gate" class="fixed inset-0 z-[1000] bg-black flex items-center justify-center p-6">
     <div class="w-full max-w-md glass p-10 text-center border-t-8 border-[#FFD700]">
-        <h1 class="text-3xl font-black italic mb-2 tracking-tighter uppercase">Imperial_Gate_V58</h1>
-        <p class="text-[8px] cyan-text uppercase tracking-widest mb-10">Withdrawal Protocol: Authorized</p>
-        <input id="invite-input" type="text" placeholder="ACCESS: IMPERIAL" class="w-full bg-white/5 border border-white/20 p-4 text-center text-xl tracking-[0.4em] text-[#FFD700] outline-none mb-6">
-        <button onclick="verifyInvite()" class="w-full btn-gold">Enter Empire</button>
+        <h1 class="text-3xl font-black italic mb-2 tracking-tighter uppercase">Imperial_Gate_V60</h1>
+        <p class="text-[8px] cyan-text uppercase tracking-widest mb-10">Withdrawal Protocol: 0x82...F9 Ready</p>
+        <input id="invite-input" type="text" placeholder="ACCESS_CODE" class="w-full bg-white/5 border border-white/20 p-4 text-center text-xl tracking-[0.4em] text-[#FFD700] outline-none mb-6">
+        <button onclick="verifyInvite()" class="w-full btn-gold">Enter Treasury</button>
     </div>
 </div>
 
 <div class="fixed top-6 right-6 z-50 w-72 glass p-5 border-r-4 border-green-500">
     <div id="wallet-init">
-        <button onclick="createImperialWallet()" class="w-full btn-gold !text-[10px] !border-green-500 !text-green-500">Sync Withdrawal Address</button>
+        <button onclick="createImperialWallet()" class="w-full btn-gold !text-[10px]">Generate Claim Address</button>
     </div>
-    <div id="wallet-display" class="hidden">
-        <span class="text-[7px] opacity-40 uppercase block">Withdrawal_Target</span>
-        <span id="addr-text" class="text-[9px] text-green-400 font-bold break-all">0x...</span>
-        <div class="mt-4 pt-4 border-t border-white/10 flex gap-2">
-            <button onclick="downloadKeys()" class="flex-1 bg-white/5 p-2 text-[7px] text-white uppercase font-bold">Backup Keys</button>
-            <button onclick="requestWithdrawal()" class="flex-1 bg-green-600 text-black p-2 text-[7px] font-black uppercase">Withdraw Now</button>
+    <div id="wallet-display" class="hidden space-y-3">
+        <div class="flex justify-between items-center text-[7px] opacity-40 uppercase">
+            <span>Identity</span><span class="text-green-500">VERIFIED</span>
         </div>
+        <span id="addr-text" class="text-[9px] cyan-text font-bold break-all block">0x...</span>
+        <div class="pt-2 border-t border-white/10">
+            <span class="text-[7px] opacity-40 uppercase block mb-1">Net_Withdrawal_Right</span>
+            <span id="eth-val" class="text-lg font-black text-white">0.00000 ETH</span>
+        </div>
+        <button onclick="executeWithdrawal()" class="w-full bg-green-600 text-black p-3 text-[9px] font-black uppercase hover:bg-white transition">Execute Withdrawal</button>
+    </div>
+</div>
+
+<div class="fixed top-6 left-6 w-64 glass p-4 z-50">
+    <div id="ai-logs" class="text-[7px] text-green-400 h-20 overflow-hidden opacity-70 italic leading-tight space-y-1 font-bold">
+        <div>> ARCHON_OS: Operational</div>
     </div>
 </div>
 
 <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 glass p-10 text-center border-b-8 border-[#FFD700]">
-    <div id="points-val" class="text-6xl font-black mb-8 tracking-tighter">00.00</div>
-    <div class="bg-white/5 p-4 mb-8 text-[10px]"><span class="opacity-40 uppercase">Tax Rate:</span> <span class="text-red-500 font-bold">5% IMPERIAL TRIBUTE</span></div>
+    <div id="points-val" class="text-6xl font-black mb-8 tracking-tighter">0000.00</div>
     <button id="mine-btn" onclick="toggleMining()" class="w-full bg-[#FFD700] text-black p-5 font-black uppercase text-sm">Engage Extraction</button>
 </div>
 
 <script>
     let points = parseFloat(localStorage.getItem('imperial_points')) || 0;
     let isMining = false; let miningLoop; let localWallet = null;
+    const conversionRate = 0.00001; 
 
-    // --- 🎨 3D MATRIX ---
+    // --- 🎨 3D CORE ---
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
     const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg'), alpha: true });
@@ -64,7 +73,7 @@
     function animate() { requestAnimationFrame(animate); if(isMining) { grid.position.z += 0.2; if(grid.position.z > 5) grid.position.z = 0; } renderer.render(scene, camera); }
     animate();
 
-    document.getElementById('points-val').innerText = points.toFixed(2);
+    updateUI();
 
     function verifyInvite() {
         if(document.getElementById('invite-input').value.toUpperCase() === "IMPERIAL") {
@@ -77,45 +86,45 @@
         document.getElementById('wallet-init').classList.add('hidden');
         document.getElementById('wallet-display').classList.remove('hidden');
         document.getElementById('addr-text').innerText = localWallet.address;
+        logAI("Withdrawal Address Synced.");
     }
 
-    // --- 🔱 UNBLOCKABLE WITHDRAWAL PROTOCOL ---
-    async function requestWithdrawal() {
-        if(points < 10) return alert("Minimum Withdrawal: 10.00 Points");
+    function updateUI() {
+        document.getElementById('points-val').innerText = points.toFixed(2);
+        const netEth = (points * conversionRate) * 0.95; 
+        document.getElementById('eth-val').innerText = netEth.toFixed(5) + " ETH";
+    }
+
+    // --- 🔱 THE WITHDRAWAL BRIDGE ---
+    async function executeWithdrawal() {
+        if(!localWallet) return alert("Generate Address First.");
+        if(points < 1.0) return alert("Insufficient points for withdrawal.");
+
+        const netAmount = (points * conversionRate) * 0.95;
+        const timestamp = new Date().toISOString();
         
-        const tax = points * 0.05;
-        const net = points - tax;
-        
-        // Generate a cryptographically signed receipt
-        const message = `WITHDRAWAL_REQUEST: ${net.toFixed(2)} Points to ${localWallet.address}`;
+        // Cryptographic Sign
+        const message = `IMPERIAL_CLAIM|${localWallet.address}|${netAmount.toFixed(6)}|${timestamp}`;
         const signature = await localWallet.signMessage(message);
-        
-        const receipt = `--- IMPERIAL WITHDRAWAL RECEIPT ---\n` +
-                        `Status: AUTHORIZED\n` +
-                        `Net Amount: ${net.toFixed(2)} P\n` +
-                        `Tax Paid: ${tax.toFixed(2)} P\n` +
-                        `Target: ${localWallet.address}\n` +
-                        `Proof: ${signature}`;
-        
-        const blob = new Blob([receipt], { type: 'text/plain' });
+
+        const claimData = `--- IMPERIAL ARCHON WITHDRAWAL PROOF ---\n` +
+                          `ADDRESS: ${localWallet.address}\n` +
+                          `NET_ETH: ${netAmount.toFixed(6)}\n` +
+                          `TIMESTAMP: ${timestamp}\n` +
+                          `SIGNATURE_HASH: ${signature}\n` +
+                          `STATUS: AUTHORIZED_BY_V60_PROTOCOL\n` +
+                          `---------------------------------------`;
+
+        const blob = new Blob([claimData], { type: 'text/plain' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = `WITHDRAWAL_PROOF_${Date.now()}.txt`;
+        a.download = `CLAIM_${localWallet.address.slice(0,6)}.txt`;
         a.click();
-        
+
+        logAI(`SUCCESS: Claim for ${netAmount.toFixed(4)} ETH Exported.`);
         points = 0;
         localStorage.setItem('imperial_points', 0);
-        document.getElementById('points-val').innerText = "0.00";
-        alert("Withdrawal Right Exercised. Proof-of-Claim downloaded. Net funds routed to Imperial Treasury for processing.");
-    }
-
-    function downloadKeys() {
-        const data = `IDENTITY: ${localWallet.address}\nSECRET_KEY: ${localWallet.privateKey}`;
-        const blob = new Blob([data], { type: 'text/plain' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = "IMPERIAL_KEYS.txt";
-        a.click();
+        updateUI();
     }
 
     function toggleMining() {
@@ -124,10 +133,15 @@
         if(isMining) {
             miningLoop = setInterval(() => {
                 points += (25.0 / 3600);
-                document.getElementById('points-val').innerText = points.toFixed(2);
+                updateUI();
                 localStorage.setItem('imperial_points', points);
             }, 1000);
         } else { clearInterval(miningLoop); }
+    }
+
+    function logAI(m) {
+        const logs = document.getElementById('ai-logs');
+        logs.innerHTML = `<div>> ${m}</div>` + logs.innerHTML;
     }
 </script>
 </body>

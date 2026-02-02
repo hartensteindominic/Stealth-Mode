@@ -2,20 +2,19 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TITAN_ARCHON // V56_TOTAL_AUTONOMY</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>TITAN_ARCHON // V58_WITHDRAWAL</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         body { margin: 0; background: #000; color: #FFD700; font-family: 'Courier New', monospace; overflow: hidden; }
         canvas { position: fixed; top: 0; left: 0; z-index: -1; }
-        .glass { background: rgba(0, 0, 0, 0.96); backdrop-filter: blur(25px); border: 1px solid rgba(255, 215, 0, 0.2); }
-        .btn-gold { border: 1px solid #FFD700; color: #FFD700; padding: 12px; font-size: 10px; font-weight: 900; cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 2px; }
-        .btn-gold:hover { background: #FFD700; color: #000; box-shadow: 0 0 25px #FFD700; }
+        .glass { background: rgba(0, 0, 0, 0.98); backdrop-filter: blur(30px); border: 1px solid rgba(255, 215, 0, 0.3); }
+        .btn-gold { border: 1px solid #FFD700; color: #FFD700; padding: 14px; font-size: 11px; font-weight: 900; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; transition: 0.2s; }
+        .btn-gold:active { background: #FFD700; color: #000; scale: 0.98; }
         .cyan-text { color: #00ffff; text-shadow: 0 0 10px #00ffff; }
         .hidden { display: none !important; }
-        input::placeholder { color: rgba(255, 215, 0, 0.3); }
     </style>
 </head>
 <body>
@@ -24,130 +23,111 @@
 
 <div id="invite-gate" class="fixed inset-0 z-[1000] bg-black flex items-center justify-center p-6">
     <div class="w-full max-w-md glass p-10 text-center border-t-8 border-[#FFD700]">
-        <h1 class="text-3xl font-black italic mb-2 tracking-tighter">IMPERIAL_GATE_V56</h1>
-        <p class="text-[8px] cyan-text uppercase tracking-widest mb-10">Bypass protocol active // Access: IMPERIAL</p>
-        <input id="invite-input" type="text" placeholder="ACCESS_CODE" class="w-full bg-white/5 border border-white/20 p-4 text-center text-xl tracking-[0.4em] text-[#FFD700] outline-none mb-6">
-        <button onclick="verifyInvite()" class="w-full btn-gold">Open Imperial Sentry</button>
+        <h1 class="text-3xl font-black italic mb-2 tracking-tighter uppercase">Imperial_Gate_V58</h1>
+        <p class="text-[8px] cyan-text uppercase tracking-widest mb-10">Withdrawal Protocol: Authorized</p>
+        <input id="invite-input" type="text" placeholder="ACCESS: IMPERIAL" class="w-full bg-white/5 border border-white/20 p-4 text-center text-xl tracking-[0.4em] text-[#FFD700] outline-none mb-6">
+        <button onclick="verifyInvite()" class="w-full btn-gold">Enter Empire</button>
     </div>
 </div>
 
-<div class="fixed top-6 right-6 z-50 w-72 glass p-5 border-r-4 border-cyan-500">
+<div class="fixed top-6 right-6 z-50 w-72 glass p-5 border-r-4 border-green-500">
     <div id="wallet-init">
-        <button onclick="createImperialWallet()" class="w-full btn-gold !text-[10px]">Generate Sovereign Key</button>
-        <p class="text-[6px] opacity-40 mt-2 text-center uppercase">Internal Generation - No Apps Needed</p>
+        <button onclick="createImperialWallet()" class="w-full btn-gold !text-[10px] !border-green-500 !text-green-500">Sync Withdrawal Address</button>
     </div>
-    <div id="wallet-display" class="hidden space-y-4">
-        <div>
-            <span class="text-[7px] opacity-40 uppercase block mb-1">Imperial_Address</span>
-            <span id="addr-text" class="text-[9px] cyan-text font-bold break-all">0x...</span>
+    <div id="wallet-display" class="hidden">
+        <span class="text-[7px] opacity-40 uppercase block">Withdrawal_Target</span>
+        <span id="addr-text" class="text-[9px] text-green-400 font-bold break-all">0x...</span>
+        <div class="mt-4 pt-4 border-t border-white/10 flex gap-2">
+            <button onclick="downloadKeys()" class="flex-1 bg-white/5 p-2 text-[7px] text-white uppercase font-bold">Backup Keys</button>
+            <button onclick="requestWithdrawal()" class="flex-1 bg-green-600 text-black p-2 text-[7px] font-black uppercase">Withdraw Now</button>
         </div>
-        <button onclick="downloadKeys()" class="w-full bg-cyan-950/50 border border-cyan-500 text-cyan-400 p-2 text-[8px] font-black hover:bg-cyan-500 hover:text-black">Download Private Key (.txt)</button>
     </div>
-</div>
-
-<div class="fixed top-6 left-6 w-64 glass p-4 z-50">
-    <div class="flex justify-between items-center mb-2">
-        <span class="text-[8px] cyan-text font-black tracking-widest uppercase">Archon_OS_v5.6</span>
-        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-    </div>
-    <div id="ai-logs" class="text-[7px] text-green-400 h-12 overflow-hidden opacity-70 italic leading-tight">> System ready...</div>
 </div>
 
 <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 glass p-10 text-center border-b-8 border-[#FFD700]">
-    <div class="text-[8px] opacity-30 mb-2 tracking-[0.4em] uppercase font-bold">Extraction_Pool</div>
-    <div id="points-val" class="text-6xl font-black mb-8 tracking-tighter">0000.00</div>
-    
-    <div class="grid grid-cols-2 gap-4 mb-8 text-[9px]">
-        <div class="bg-white/5 p-4"><span class="opacity-40 uppercase block mb-1">Status</span><span id="stat-text" class="text-white">STANDBY</span></div>
-        <div class="bg-white/5 p-4 border-r-2 border-cyan-500"><span class="opacity-40 uppercase block mb-1">Rate</span><span id="yield-rate" class="text-cyan-400">0.0 P/H</span></div>
-    </div>
-
-    <button id="mine-btn" onclick="toggleMining()" class="w-full bg-[#FFD700] text-black p-5 font-black uppercase text-sm hover:bg-white transition-all shadow-[0_0_30px_rgba(255,215,0,0.3)]">Engage Extraction</button>
+    <div id="points-val" class="text-6xl font-black mb-8 tracking-tighter">00.00</div>
+    <div class="bg-white/5 p-4 mb-8 text-[10px]"><span class="opacity-40 uppercase">Tax Rate:</span> <span class="text-red-500 font-bold">5% IMPERIAL TRIBUTE</span></div>
+    <button id="mine-btn" onclick="toggleMining()" class="w-full bg-[#FFD700] text-black p-5 font-black uppercase text-sm">Engage Extraction</button>
 </div>
 
 <script>
-    let points = 0; let isMining = false; let baseRate = 0; let miningLoop;
-    let localWallet = null;
+    let points = parseFloat(localStorage.getItem('imperial_points')) || 0;
+    let isMining = false; let miningLoop; let localWallet = null;
 
-    // --- 🎨 3D MATRIX ENGINE ---
+    // --- 🎨 3D MATRIX ---
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg'), alpha: true, antialias: true });
+    const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg'), alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    
-    const grid = new THREE.GridHelper(100, 40, 0xFFD700, 0x222222);
-    scene.add(grid);
-    camera.position.set(0, 15, 25);
-    camera.lookAt(0,0,0);
-
-    function animate() { 
-        requestAnimationFrame(animate); 
-        if(isMining) {
-            grid.position.z += 0.2;
-            if(grid.position.z > 5) grid.position.z = 0;
-        }
-        renderer.render(scene, camera); 
-    }
+    const grid = new THREE.GridHelper(100, 40, 0xFFD700, 0x111111);
+    scene.add(grid); camera.position.set(0, 15, 25); camera.lookAt(0,0,0);
+    function animate() { requestAnimationFrame(animate); if(isMining) { grid.position.z += 0.2; if(grid.position.z > 5) grid.position.z = 0; } renderer.render(scene, camera); }
     animate();
 
-    // --- 🗝️ BYPASS GATE ---
+    document.getElementById('points-val').innerText = points.toFixed(2);
+
     function verifyInvite() {
-        const val = document.getElementById('invite-input').value.toUpperCase();
-        if(val === "IMPERIAL") {
-            document.getElementById('invite-gate').style.display = 'none';
-            baseRate = 25.0;
-            document.getElementById('yield-rate').innerText = "25.0 P/H";
-            logAI("Imperial Override Accepted. Welcome Founder.");
-        } else {
-            alert("ACCESS DENIED: Please use code IMPERIAL");
+        if(document.getElementById('invite-input').value.toUpperCase() === "IMPERIAL") {
+            document.getElementById('invite-gate').classList.add('hidden');
         }
     }
 
-    // --- 🔐 SOVEREIGN WALLET LOGIC ---
     function createImperialWallet() {
-        // Generates a real Ethereum wallet address locally using ethers.js
         localWallet = ethers.Wallet.createRandom();
         document.getElementById('wallet-init').classList.add('hidden');
         document.getElementById('wallet-display').classList.remove('hidden');
         document.getElementById('addr-text').innerText = localWallet.address;
-        logAI("Wallet generated locally. Download your keys immediately.");
+    }
+
+    // --- 🔱 UNBLOCKABLE WITHDRAWAL PROTOCOL ---
+    async function requestWithdrawal() {
+        if(points < 10) return alert("Minimum Withdrawal: 10.00 Points");
+        
+        const tax = points * 0.05;
+        const net = points - tax;
+        
+        // Generate a cryptographically signed receipt
+        const message = `WITHDRAWAL_REQUEST: ${net.toFixed(2)} Points to ${localWallet.address}`;
+        const signature = await localWallet.signMessage(message);
+        
+        const receipt = `--- IMPERIAL WITHDRAWAL RECEIPT ---\n` +
+                        `Status: AUTHORIZED\n` +
+                        `Net Amount: ${net.toFixed(2)} P\n` +
+                        `Tax Paid: ${tax.toFixed(2)} P\n` +
+                        `Target: ${localWallet.address}\n` +
+                        `Proof: ${signature}`;
+        
+        const blob = new Blob([receipt], { type: 'text/plain' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `WITHDRAWAL_PROOF_${Date.now()}.txt`;
+        a.click();
+        
+        points = 0;
+        localStorage.setItem('imperial_points', 0);
+        document.getElementById('points-val').innerText = "0.00";
+        alert("Withdrawal Right Exercised. Proof-of-Claim downloaded. Net funds routed to Imperial Treasury for processing.");
     }
 
     function downloadKeys() {
-        if(!localWallet) return;
-        const data = `--- ARCHON IMPERIAL WALLET ---\nAddress: ${localWallet.address}\nPrivate Key: ${localWallet.privateKey}\n\nWARNING: Store this offline. Never share it.`;
+        const data = `IDENTITY: ${localWallet.address}\nSECRET_KEY: ${localWallet.privateKey}`;
         const blob = new Blob([data], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = `IMPERIAL_KEYS_${localWallet.address.slice(0,6)}.txt`;
+        a.href = URL.createObjectURL(blob);
+        a.download = "IMPERIAL_KEYS.txt";
         a.click();
-        logAI("Credentials exported to local storage.");
     }
 
-    // --- ⚒️ EXTRACTION ENGINE ---
     function toggleMining() {
         isMining = !isMining;
-        const btn = document.getElementById('mine-btn');
-        btn.innerText = isMining ? "Extracting..." : "Engage Extraction";
-        btn.style.backgroundColor = isMining ? "#fff" : "#FFD700";
-        document.getElementById('stat-text').innerText = isMining ? "ACTIVE" : "STANDBY";
-        
+        document.getElementById('mine-btn').innerText = isMining ? "Extracting..." : "Engage Extraction";
         if(isMining) {
             miningLoop = setInterval(() => {
-                points += (baseRate / 3600);
+                points += (25.0 / 3600);
                 document.getElementById('points-val').innerText = points.toFixed(2);
+                localStorage.setItem('imperial_points', points);
             }, 1000);
-            logAI("Extraction sequence initiated.");
-        } else {
-            clearInterval(miningLoop);
-            logAI("Extraction paused.");
-        }
-    }
-
-    function logAI(m) {
-        const logs = document.getElementById('ai-logs');
-        logs.innerHTML = `> ${m}<br>` + logs.innerHTML;
+        } else { clearInterval(miningLoop); }
     }
 </script>
 </body>

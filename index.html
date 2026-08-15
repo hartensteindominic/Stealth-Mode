@@ -86,7 +86,7 @@ canvas{display:block;width:100%;height:100%}
 <div class="card-title">Render Media</div>
 <div style="display:flex;flex-direction:column;gap:5px">
 <button class="primary-btn" onclick="exportCurrentPNG()" style="background:#0f766e;">📸 Render 5D Frame</button>
-<button class="primary-btn" onclick="export5DWebMVideo()" style="background:#2563eb;">🎥 Export .webm Stream</button>
+<button class="primary-btn" id="export-video-btn" onclick="export5DWebMVideo()" style="background:#2563eb;">🎥 Export .webm Stream</button>
 </div>
 </div>
 <div class="section-card" style="flex:1">
@@ -212,7 +212,6 @@ function apply5DFrameAndRender(frameIdx, metaBlend){
   const tupleSize = (src.length % 4 === 0) ? 4 : 3;
   
   for(let i=0; i<src.length; i+=tupleSize){
-    // Apply 5D meta-modulation shift dynamically based on Axis E slider value
     const metaOffset = (targetFrame.meta[Math.floor(i/tupleSize)] || 0.5) * metaBlend * 0.4;
     filteredPositions.push(src[i], src[i+1] + metaOffset, src[i+2]);
     if(cols.length >= (i/tupleSize)*3 + 3){
@@ -364,11 +363,17 @@ function export5DWebMVideo(){
         appendChat('No active 5D spatial environment stream to encode.', 'error');
         return;
     }
-    appendChat('Compiling 5D spatial stream multiplex (.webm)...', 'system');
+    
+    const exportBtn = document.getElementById('export-video-btn');
+    exportBtn.disabled = true;
+    exportBtn.style.opacity = '0.6';
+    appendChat('🎥 Compiling 5D spatial stream multiplex (.webm)... Please wait.', 'system');
+
     let recordedChunks = [];
     const canvas = document.getElementById('three-canvas');
     const stream = canvas.captureStream(30); 
     let mediaRecorder;
+    
     try {
         mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
     } catch (e) {
@@ -376,31 +381,48 @@ function export5DWebMVideo(){
             mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
         } catch (err) {
             appendChat('Media codec rejected by environment.', 'error');
+            exportBtn.disabled = false;
+            exportBtn.style.opacity = '1';
             return;
         }
     }
+
     mediaRecorder.ondataavailable = (event) => {
         if (event.data && event.data.size > 0) {
             recordedChunks.push(event.data);
         }
     };
+
     mediaRecorder.onstop = () => {
         const blob = new Blob(recordedChunks, { type: 'video/webm' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download=`hyperstream_5d_vid_${Date.now()}.webm`;
+        a.download = `hyperstream_5d_vid_${Date.now()}.webm`;
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 2000);
-        appendChat('✓ 5D Spatial Stream exported successfully!', 'system');
+        
+        appendChat('✓ 5D Spatial Stream exported & saved successfully!', 'system');
+        exportBtn.disabled = false;
+        exportBtn.style.opacity = '1';
+        setProgress(0);
     };
+
     mediaRecorder.start();
     let frameCounter = 0;
     const totalFrames = Math.max(90, playbackFrames.length);
     const originalPos = camera.position.clone();
+
     function recordVideoLoop(){
         frameCounter++;
         renderer.render(scene, camera);
+        
+        // Update visual progress bar during recording
+        const progressPercent = (frameCounter / totalFrames) * 100;
+        setProgress(progressPercent);
+
         if(frameCounter < totalFrames){
             requestAnimationFrame(recordVideoLoop);
         } else {

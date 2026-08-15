@@ -3,548 +3,244 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HyperStream4D • Interactive 3D Video Game Sandbox v5</title>
+<title>HyperStream3D • 3D Video Processor Studio</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#030712;color:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;height:100vh;display:flex;overflow:hidden}
-#sidebar{width:460px;min-width:320px;background:#0b0f19;border-right:1px solid #1f2937;display:flex;flex-direction:column;padding:14px;gap:10px;z-index:10;overflow-y:auto}
+#sidebar{width:420px;min-width:300px;background:#0b0f19;border-right:1px solid #1f2937;display:flex;flex-direction:column;padding:14px;gap:10px;z-index:10;overflow-y:auto}
 .brand{font-size:15px;font-weight:800;letter-spacing:1.2px;color:#38bdf8}
-.brand span{background: -webkit-linear-gradient(#22c55e, #38bdf8, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent;}
+.brand span{background: -webkit-linear-gradient(#3b82f6, #38bdf8, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent;}
 .section-card{background:rgba(17,24,39,.7);border:1px solid #1f2937;border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:6px}
 .card-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#94a3b8}
-.action-toggle-row{display:flex;gap:6px}
-.tab-btn{flex:1;padding:8px 4px;background:#1e293b;border:1px solid #334155;border-radius:8px;color:#94a3b8;font-size:11px;font-weight:600;cursor:pointer}
-.tab-btn.active{background:#22c55e;color:#030712;border-color:#16a34a;font-weight:800}
-.upload-section{border:2px dashed #334155;padding:12px;border-radius:10px;text-align:center;background:rgba(255,255,255,.01);cursor:pointer}
-.upload-section.dragover{border-color:#22c55e;background:rgba(34,197,94,.08)}
-input[type=file]{display:none} textarea{width:100%;height:60px;background:#1e293b;border:1px solid #334155;padding:8px;border-radius:8px;color:#fff;font-family:monospace;font-size:11px;resize:none}
+.upload-section{border:2px dashed #334155;padding:14px;border-radius:10px;text-align:center;background:rgba(255,255,255,.01);cursor:pointer}
+.upload-section.dragover{border-color:#3b82f6;background:rgba(59,130,246,.08)}
+input[type=file]{display:none}
 .layer-control-row{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#cbd5e1}
-input[type=range]{accent-color:#22c55e;cursor:pointer;width:110px}
-#chat-container{flex:1;min-height:50px;max-height:75px;background:#1e293b;border-radius:10px;padding:6px;display:flex;flex-direction:column;gap:4px;overflow-y:auto;font-size:11px}
-.chat-message{padding:5px 7px;border-radius:6px;background:#334155;color:#e2e8f0;word-break:break-word}
-.chat-message.system{background:#14532d;color:#bbf7d0}.chat-message.error{background:#7f1d1d;color:#fecaca}
-input[type=text]{flex:1;background:#1e293b;border:1px solid #334155;padding:7px;border-radius:8px;color:#fff;font-size:11px}
-button.primary-btn{background:#22c55e;color:#030712;border:none;padding:8px 12px;border-radius:8px;font-weight:800;cursor:pointer;font-size:11px}
-button.primary-btn:hover{background:#16a34a}
+input[type=range]{accent-color:#3b82f6;cursor:pointer;width:110px}
+button.primary-btn{background:#3b82f6;color:#ffffff;border:none;padding:8px 12px;border-radius:8px;font-weight:800;cursor:pointer;font-size:11px}
+button.primary-btn:hover{background:#2563eb}
 button.secondary-btn{background:#334155;color:#f1f5f9;border:none;padding:8px;border-radius:8px;font-weight:600;cursor:pointer;font-size:11px}
 #viewer-container{flex:1;position:relative;background:radial-gradient(circle at center,#0f172a 0%,#030712 100%)}
 canvas{display:block;width:100%;height:100%}
 .stats-overlay{position:absolute;top:16px;right:16px;background:rgba(3,7,18,.85);backdrop-filter:blur(8px);padding:10px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.08);font-size:11px;color:#94a3b8}
-.stats-overlay span{color:#22c55e;font-weight:700}.progress-bar{height:3px;background:#1e293b;border-radius:1.5px;overflow:hidden;margin-top:3px}.progress-fill{height:100%;background:#22c55e;width:0%;transition:width.2s}
-.vault-item{display:flex;justify-content:space-between;align-items:center;background:#1e293b;padding:5px 7px;border-radius:6px;font-size:11px}
-.crosshair{position:absolute;top:50%;left:50%;width:8px;height:8px;border:2px solid rgba(255,255,255,0.6);border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;display:none}
+.stats-overlay span{color:#3b82f6;font-weight:700}
+.progress-bar{height:3px;background:#1e293b;border-radius:1.5px;overflow:hidden;margin-top:3px}
+.progress-fill{height:100%;background:#3b82f6;width:0%;transition:width.2s}
+video{display:none}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
 <div id="sidebar">
-<div class="brand">HYPERSTREAM 4D ENGINE<br><span>INTERACTIVE 3D GAME SANDBOX v5</span></div>
+<div class="brand">HYPERSTREAM 3D<br><span>VIDEO PROCESSOR SUITE</span></div>
 
-<div class="action-toggle-row">
-<button id="btn-tab-file" class="tab-btn active" onclick="switchInputMode('file')">📂 Upload</button>
-<button id="btn-tab-paste" class="tab-btn" onclick="switchInputMode('paste')">📋 Paste</button>
-<button id="btn-tab-game" class="tab-btn" onclick="switchInputMode('game')" style="background:#14532d;color:#4ade80;">🎮 Game Mode</button>
-</div>
-
-<div id="panel-file" class="section-card">
-<div class="card-title">4D Neural Stream Payload</div>
+<div class="section-card">
+<div class="card-title">Source Video Input</div>
 <div id="drop-zone" class="upload-section" onclick="document.getElementById('file-input').click()">
-<span class="upload-label">Drop 4D Stream JSON (.json)<br><small style="opacity:.6">Format: { HyperStream4D: [...] }</small></span>
-<input type="file" id="file-input" accept=".json" onchange="handleFileUpload(event)">
+<span class="upload-label">Drop Video File (.mp4, .webm)<br><small style="opacity:.6">Converts video frames into live 3D depth meshes</small></span>
+<input type="file" id="file-input" accept="video/*" onchange="handleVideoUpload(event)">
 </div>
-<div style="display:flex;gap:6px"><button class="secondary-btn" style="flex:1" onclick="clearScene()">Clear Map</button><button class="secondary-btn" style="flex:1" onclick="loadVaultList()">Vault Cores</button></div>
+<div style="display:flex;gap:6px">
+  <button class="primary-btn" style="flex:1" id="play-vid-btn" onclick="toggleVideoPlayback()">Play / Pause</button>
+  <button class="secondary-btn" style="flex:1" onclick="loadSampleVideo()">Sample Feed</button>
 </div>
-
-<div id="panel-paste" class="section-card" style="display:none">
-<div class="card-title">Paste 4D Sequence Node</div>
-<textarea id="json-paste-box" placeholder='Paste payload: {"HyperStream4D":[{"v":[...],"c":[...]}]}'></textarea>
-<button class="primary-btn" onclick="handleCodePaste()">Process Game World</button>
-</div>
-
-<div id="panel-game" class="section-card" style="display:none">
-<div class="card-title">🎮 Arcade Physics & FPS Game Studio</div>
-<div class="layer-control-row"><span>🕹️ Enter Interactive FPS Mode</span><button class="primary-btn" onclick="toggleGameMode()" style="background:#22c55e;padding:6px 10px;">Lock Mouse & Play</button></div>
-<div class="layer-control-row"><span>Gravity Force</span><input type="range" id="gravity-range" min="0" max="25" step="0.5" value="9.8" oninput="updateGravity(this.value)"></div>
-<div class="layer-control-row"><span>Spawn Physics Object (Ball)</span><button class="secondary-btn" onclick="spawnPhysicsBall()" style="background:#16a34a;color:#fff;">Throw Projectile [F]</button></div>
-<div style="font-size:10px;color:#94a3b8;margin-top:2px">Controls: **WASD** to Walk, **Mouse** to Look Around, **Space** to Jump, **F** to Shoot Object, **ESC** to Exit.</div>
 </div>
 
 <div class="section-card">
-<div class="card-title">Environment & Graphics Shaders</div>
-<div class="layer-control-row"><span>Video Game Shaders</span>
+<div class="card-title">3D Depth & Displace Shaders</div>
+<div class="layer-control-row"><span>Display Mode</span>
   <select id="render-mode-select" onchange="updateRenderMode(this.value)" style="background:#1e293b;color:#fff;border:1px solid #334155;border-radius:6px;padding:3px;font-size:11px;">
-    <option value="solid" selected>PBR Retro Arcade Shader</option>
-    <option value="wireframe">Cyberpunk Wireframe</option>
-    <option value="toon">Cel-Shaded Comic Shader</option>
-    <option value="points">Neon Particle Matrix</option>
+    <option value="textured" selected>Textured 3D Surface</option>
+    <option value="wireframe">Wireframe Depth Map</option>
+    <option value="points">Particle Cloud Matrix</option>
   </select>
 </div>
-<div class="layer-control-row"><span>Temporal Frame Scrub (T)</span><input type="range" id="t-scrub-range" min="0" max="100" step="1" value="0" oninput="updateTScrubs(this.value)"><span id="t-scrub-val">0 / 0</span></div>
-<div class="layer-control-row"><span>Depth Scale Z</span><input type="range" id="depth-scale-range" min="1" max="30" step="0.5" value="14" oninput="updateDepthScale(this.value)"></div>
-<div style="font-size:11px;color:#94a3b8">Active Physics Entities: <span id="node-counter">0</span><div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div></div>
-</div>
-
-<div class="section-card">
-<div class="card-title">Vaulted Game Maps</div>
-<div id="vault-list" style="display:flex;flex-direction:column;gap:5px;max-height:60px;overflow-y:auto"><small style="color:#64748b">Empty</small></div>
+<div class="layer-control-row"><span>3D Extrusion Depth</span><input type="range" id="depth-scale-range" min="0.1" max="5.0" step="0.1" value="1.5" oninput="currentDepthScale = parseFloat(this.value)"></div>
+<div class="layer-control-row"><span>Mesh Resolution</span><input type="range" id="res-range" min="32" max="128" step="16" value="64" onchange="rebuildMeshResolution(this.value)"></div>
+<div style="font-size:11px;color:#94a3b8">Active Pixels: <span id="node-counter">0</span><div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div></div>
 </div>
 
 <div class="section-card" style="flex:1">
-<div class="card-title">Game Console Log</div>
-<div id="chat-container"><div class="chat-message system">HyperStream4D v5 physics sandbox initialized. Ready for gameplay.</div></div>
-<div style="display:flex;gap:6px;margin-top:2px"><input type="text" id="chat-input" placeholder="Console command..." onkeypress="handleKeyPress(event)"><button class="primary-btn" onclick="sendChatMessage()">Send</button></div>
+<div class="card-title">Processor Status</div>
+<div id="status-log" style="font-size:11px;color:#94a3b8;font-family:monospace;background:#1e293b;padding:8px;border-radius:8px;height:100px;overflow-y:auto">
+System initialized. Ready for video feed processing.
+</div>
 </div>
 </div>
 
 <div id="viewer-container">
-<div class="crosshair" id="crosshair"></div>
-<div class="stats-overlay">Mode: <span id="render-status">Standard Orbit 3D</span><br><span id="bbox-info" style="font-size:10px;color:#64748b">FPS: <span id="fps-counter">60</span></span></div>
+<div class="stats-overlay">Mode: <span id="render-status">3D Depth Processor</span><br>FPS: <span id="fps-counter">60</span></div>
 <canvas id="three-canvas"></canvas>
 </div>
 
+<video id="source-video" crossorigin="anonymous" playsinline muted loop></video>
+<canvas id="video-processing-canvas" width="64" height="64" style="display:none"></canvas>
+
 <script>
-let scene, camera, renderer, controls, pointerControls, gridHelper, spatialObject = null;
-let currentDepthScale = 14, currentFPS = 20, lastFrameTime = 0;
-let is4DPlayMode = true, playbackFrames = [], playbackFrameIndex = 0;
-let raw4DSourceFrames = [], currentRenderMode = 'solid';
-let isGameModeActive = false;
+let scene, camera, renderer, controls, videoMesh;
+let videoElement, videoCanvas, videoContext;
+let currentDepthScale = 1.5, currentResolution = 64, currentRenderMode = 'textured';
+let texture, geometry, material;
 
-// Physics Simulation Engine Arrays
-let physicsObjects = [];
-let keysPressed = { forward: false, backward: false, left: false, right: false, jump: false };
-let playerVelocity = new THREE.Vector3();
-let playerOnGround = false;
-let gravityValue = 9.8;
-
-const VAULT_KEY = 'hyperstream_4d_vault_v5';
-
-window.addEventListener('DOMContentLoaded', () => { init3D(); setupDragDrop(); loadVaultList(); setupKeyboardControls(); });
+window.addEventListener('DOMContentLoaded', () => { init3D(); setupDragDrop(); });
 
 function init3D(){
-  const c = document.getElementById('viewer-container'); 
+  const container = document.getElementById('viewer-container');
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x030712);
-  scene.fog = new THREE.FogExp2(0x030712, 0.04);
 
-  camera = new THREE.PerspectiveCamera(65, c.clientWidth / c.clientHeight, 0.05, 1000); 
-  camera.position.set(0, 1.6, 4.0);
-  
+  camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+  camera.position.set(0, 0, 3.5);
+
   const canvas = document.getElementById('three-canvas');
-  renderer = new THREE.WebGLRenderer({canvas, antialias: true, alpha: false, preserveDrawingBuffer: true});
-  renderer.setSize(c.clientWidth, c.clientHeight); 
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
-  
-  // Standard Orbit Controls for editing/viewing
-  controls = new THREE.OrbitControls(camera, renderer.domElement); 
-  controls.enableDamping = true; 
-  controls.dampingFactor = 0.08;
+  renderer = new THREE.WebGLRenderer({canvas, antialias: true});
+  renderer.setSize(container.clientWidth, container.clientHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-  // PointerLock Controls for First Person Video Game Mode
-  pointerControls = new THREE.PointerLockControls(camera, renderer.domElement);
-  pointerControls.addEventListener('lock', () => {
-    isGameModeActive = true;
-    controls.enabled = false;
-    document.getElementById('crosshair').style.display = 'block';
-    document.getElementById('render-status').innerText = '🎮 FPS Video Game Mode Active';
-    appendChat('Entered interactive physics game mode. Use WASD to move, mouse to look, SPACE to jump.', 'system');
-  });
-  pointerControls.addEventListener('unlock', () => {
-    isGameModeActive = false;
-    controls.enabled = true;
-    document.getElementById('crosshair').style.display = 'none';
-    document.getElementById('render-status').innerText = 'Standard Orbit 3D';
-    appendChat('Exited game mode.', 'system');
-  });
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.05;
 
-  gridHelper = new THREE.GridHelper(50, 50, 0x22c55e, 0x0f172a); 
-  gridHelper.position.y = -1.5; 
-  scene.add(gridHelper);
+  scene.add(new THREE.AmbientLight(0xffffff, 1.0));
 
-  // Video Game Studio Lighting
-  scene.add(new THREE.AmbientLight(0xffffff, 0.7)); 
-  const keyLight = new THREE.DirectionalLight(0xffffff, 1.3); keyLight.position.set(5, 10, 5); scene.add(keyLight);
-  const fillLight = new THREE.DirectionalLight(0x22c55e, 0.5); fillLight.position.set(-5, -2, -3); scene.add(fillLight);
-  const rimLight = new THREE.DirectionalLight(0x38bdf8, 0.8); rimLight.position.set(0, 8, -8); scene.add(rimLight);
+  videoElement = document.getElementById('source-video');
+  videoCanvas = document.getElementById('video-processing-canvas');
+  videoContext = videoCanvas.getContext('2d', { willReadFrequently: true });
 
-  window.addEventListener('resize', onWindowResize); 
+  texture = new THREE.VideoTexture(videoElement);
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+
+  buildVideoMesh(currentResolution);
+
+  window.addEventListener('resize', onWindowResize);
   animate();
 }
 
-function toggleGameMode(){
-  if(!spatialObject){
-    appendChat('Please load a 4D environment core first before entering game mode!', 'error');
-    return;
-  }
-  if(isGameModeActive){
-    pointerControls.unlock();
+function buildVideoMesh(res){
+  if(videoMesh){ scene.remove(videoMesh); geometry.dispose(); material.dispose(); }
+
+  currentResolution = res;
+  videoCanvas.width = res;
+  videoCanvas.height = res;
+
+  geometry = new THREE.PlaneGeometry(3, 3, res - 1, res - 1);
+  updateMaterial();
+
+  videoMesh = new THREE.Mesh(geometry, material);
+  scene.add(videoMesh);
+  document.getElementById('node-counter').innerText = (res * res).toLocaleString();
+}
+
+function updateMaterial(){
+  if(material) material.dispose();
+
+  if(currentRenderMode === 'textured'){
+    material = new THREE.MeshStandardMaterial({
+      map: texture,
+      roughness: 0.4,
+      metalness: 0.2,
+      side: THREE.DoubleSide,
+      wireframe: false
+    });
+  } else if(currentRenderMode === 'wireframe'){
+    material = new THREE.MeshBasicMaterial({
+      map: texture,
+      wireframe: true,
+      side: THREE.DoubleSide
+    });
   } else {
-    pointerControls.lock();
+    material = new THREE.PointsMaterial({
+      size: 0.03,
+      map: texture,
+      vertexColors: false,
+      transparent: true
+    });
   }
 }
 
-function setupKeyboardControls(){
-  document.addEventListener('keydown', (e) => {
-    if(!isGameModeActive) return;
-    switch(e.code){
-      case 'KeyW': keysPressed.forward = true; break;
-      case 'KeyS': keysPressed.backward = true; break;
-      case 'KeyA': keysPressed.left = true; break;
-      case 'KeyD': keysPressed.right = true; break;
-      case 'Space': 
-        if(playerOnGround){ playerVelocity.y = 5.5; playerOnGround = false; }
-        break;
-      case 'KeyF': spawnPhysicsBall(); break;
-    }
-  });
-
-  document.addEventListener('keyup', (e) => {
-    if(!isGameModeActive) return;
-    switch(e.code){
-      case 'KeyW': keysPressed.forward = false; break;
-      case 'KeyS': keysPressed.backward = false; break;
-      case 'KeyA': keysPressed.left = false; break;
-      case 'KeyD': keysPressed.right = false; break;
-    }
-  });
+function updateRenderMode(mode){
+  currentRenderMode = mode;
+  updateMaterial();
+  if(videoMesh) videoMesh.material = material;
 }
 
-function spawnPhysicsBall(){
-  if(!spatialObject) return;
-  const sphereGeo = new THREE.SphereGeometry(0.12, 16, 16);
-  const sphereMat = new THREE.MeshStandardMaterial({color: 0x22c55e, roughness: 0.2, metalness: 0.8});
-  const ball = new THREE.Mesh(sphereGeo, sphereMat);
-  
-  // Spawn from camera position
-  ball.position.copy(camera.position);
-  scene.add(ball);
-
-  // Calculate throw velocity vector from camera look direction
-  const dir = new THREE.Vector3();
-  camera.getWorldDirection(dir);
-  
-  physicsObjects.push({
-    mesh: ball,
-    velocity: dir.multiplyScalar(14),
-    mass: 1.0,
-    radius: 0.12,
-    isBall: true
-  });
-  
-  document.getElementById('node-counter').innerText = (parseInt(document.getElementById('node-counter').innerText.replace(/,/g,'')) + 1).toLocaleString();
+function rebuildMeshResolution(val){
+  buildVideoMesh(parseInt(val));
 }
 
-let clock = new THREE.Clock();
-function animate(now){
-  requestAnimationFrame(animate); 
-  const delta = clock.getDelta();
+function animate(){
+  requestAnimationFrame(animate);
 
-  if(isGameModeActive){
-    // FPS Physics movement update
-    const speed = 5.0 * delta;
-    playerVelocity.x -= playerVelocity.x * 10.0 * delta;
-    playerVelocity.z -= playerVelocity.z * 10.0 * delta;
-    playerVelocity.y -= gravityValue * delta; // apply gravity
+  if(videoElement.readyState === videoElement.HAVE_ENOUGH_DATA && !videoElement.paused){
+    videoContext.drawImage(videoElement, 0, 0, currentResolution, currentResolution);
+    const imgData = videoContext.getImageData(0, 0, currentResolution, currentResolution).data;
+    const positions = geometry.attributes.position;
 
-    const direction = new THREE.Vector3();
-    if(keysPressed.forward) direction.z += 1;
-    if(keysPressed.backward) direction.z -= 1;
-    if(keysPressed.left) direction.x -= 1;
-    if(keysPressed.right) direction.x += 1;
-    direction.normalize();
+    // Displace vertices based on perceived luminance (pseudo-depth processor)
+    for(let i = 0; i < positions.count; i++){
+      const x = i % currentResolution;
+      const y = Math.floor(i / currentResolution);
+      const pixelIndex = (y * currentResolution + x) * 4;
+      
+      const r = imgData[pixelIndex];
+      const g = imgData[pixelIndex + 1];
+      const b = imgData[pixelIndex + 2];
+      const luminance = (r * 0.299 + g * 0.587 + b * 0.114) / 255;
 
-    if(keysPressed.forward || keysPressed.backward) pointerControls.moveForward(direction.z * speed);
-    if(keysPressed.left || keysPressed.right) pointerControls.moveRight(direction.x * speed);
-
-    camera.position.y += playerVelocity.y * delta;
-
-    // Floor collision check for player
-    if(camera.position.y < -0.2){
-      camera.position.y = -0.2;
-      playerVelocity.y = 0;
-      playerOnGround = true;
+      const originalZ = 0; 
+      positions.setZ(i, originalZ + (luminance * currentDepthScale - (currentDepthScale / 2)));
     }
-  } else {
-    if(controls) controls.update();
+    positions.needsUpdate = true;
+    geometry.computeVertexNormals();
   }
 
-  // Update arcade physics projectiles in world
-  for(let i = physicsObjects.length - 1; i >= 0; i--){
-    let obj = physicsObjects[i];
-    obj.velocity.y -= (gravityValue * 0.8) * delta;
-    obj.mesh.position.addScaledVector(obj.velocity, delta);
-
-    // Simple floor bounce
-    if(obj.mesh.position.y < -1.3){
-      obj.mesh.position.y = -1.3;
-      obj.velocity.y = -obj.velocity.y * 0.5; // bounce damping
-      obj.velocity.x *= 0.8;
-      obj.velocity.z *= 0.8;
-    }
-  }
-
-  // 4D temporal frame progression
-  if(is4DPlayMode && playbackFrames.length > 0 && spatialObject && now - lastFrameTime > (1000 / currentFPS)){
-    apply4DFrameAndRender(playbackFrameIndex);
-    playbackFrameIndex = (playbackFrameIndex + 1) % playbackFrames.length;
-    const scrubRange = document.getElementById('t-scrub-range');
-    if(scrubRange) scrubRange.value = playbackFrameIndex;
-    document.getElementById('t-scrub-val').innerText = `${playbackFrameIndex} / ${playbackFrames.length - 1}`;
-    lastFrameTime = now;
-  }
-  
+  if(controls) controls.update();
   if(renderer && scene && camera) renderer.render(scene, camera);
 }
 
 function onWindowResize(){
-  const c = document.getElementById('viewer-container'); 
-  if(!c || !camera || !renderer) return; 
-  camera.aspect = c.clientWidth / c.clientHeight; 
-  camera.updateProjectionMatrix(); 
-  renderer.setSize(c.clientWidth, c.clientHeight);
+  const container = document.getElementById('viewer-container');
+  if(!container || !camera || !renderer) return;
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
 }
 
-function switchInputMode(m){
-  ['file','paste','game'].forEach(x=>{
-    document.getElementById('btn-tab-'+x)?.classList.remove('active'); 
-    document.getElementById('panel-'+x).style.display='none';
-  }); 
-  document.getElementById('btn-tab-'+m)?.classList.add('active'); 
-  document.getElementById('panel-'+m).style.display='flex';
-}
-
-function setProgress(p){ document.getElementById('progress-fill').style.width = Math.min(100, Math.max(0, p)) + '%'; }
-function appendChat(t, s=''){
-  const b = document.getElementById('chat-container'); 
-  const d = document.createElement('div'); 
-  d.className = 'chat-message ' + s; 
-  d.innerText = t; 
-  b.appendChild(d); 
-  b.scrollTop = b.scrollHeight;
-}
-
-function clearScene(){
-  is4DPlayMode = false; playbackFrames = []; playbackFrameIndex = 0; raw4DSourceFrames = []; 
-  if(spatialObject){ scene.remove(spatialObject); spatialObject.geometry.dispose(); spatialObject.material.dispose(); spatialObject = null; } 
-  physicsObjects.forEach(o => scene.remove(o.mesh));
-  physicsObjects = [];
-  document.getElementById('node-counter').innerText = '0'; 
-  document.getElementById('render-status').innerText = 'Map Cleared'; 
-  document.getElementById('bbox-info').innerText = ''; 
-  setProgress(0);
-}
-
-function updateGravity(v){ gravityValue = parseFloat(v); }
-function updateDepthScale(v){ currentDepthScale = parseFloat(v); if(raw4DSourceFrames.length > 0) apply4DFrameAndRender(playbackFrameIndex); } 
-function updateRenderMode(m){ currentRenderMode = m; if(raw4DSourceFrames.length > 0) apply4DFrameAndRender(playbackFrameIndex); }
-
-function updateTScrubs(val){
-  playbackFrameIndex = parseInt(val);
-  is4DPlayMode = false;
-  if(raw4DSourceFrames.length > 0){
-    apply4DFrameAndRender(playbackFrameIndex);
-    document.getElementById('t-scrub-val').innerText = `${playbackFrameIndex} / ${playbackFrames.length - 1}`;
-  }
-}
-
-function toNumberArray(arr){
- if(!arr) return []; const out = []; for(let i=0; i<arr.length; i++){ const n = parseFloat(arr[i]); if(isFinite(n)) out.push(n); } return out;
-}
-
-function extract4DSequence(data){
- if(!data) return null;
- let raw = data.HyperStream4D || data.hyperStream || data.condensedNodes || (Array.isArray(data) ? data : null);
- if(!raw) return null;
- return raw.map(f=>{
-  let v = f.v || f.vertices || [];
-  let c = f.c || f.colors || [];
-  return {vertices4D: toNumberArray(v), colors: toNumberArray(c)};
- }).filter(f => f.vertices4D.length > 0);
-}
-
-function generateAdvancedVolumetricMesh(count, positions, colors){
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  g.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-  
-  const numVertices = count;
-  const side = Math.round(Math.sqrt(numVertices));
-  const indices = [];
-
-  if(side > 3){
-    for (let i = 0; i < numVertices - side - 1; i++) {
-      if ((i + 1) % side !== 0) {
-        indices.push(i, i + 1, i + side);
-        indices.push(i + 1, i + side + 1, i + side);
-      }
-    }
+function toggleVideoPlayback(){
+  if(videoElement.paused){
+    videoElement.play().then(() => {
+      logStatus('Video stream playing. Processing 3D depth fields.');
+    }).catch(e => logStatus('Playback error: ' + e.message));
   } else {
-    for(let i = 0; i < numVertices - 2; i += 3){
-      indices.push(i, i+1, i+2);
-    }
+    videoElement.pause();
+    logStatus('Video paused.');
   }
-  
-  if(indices.length > 0) g.setIndex(indices);
-  g.computeVertexNormals();
-  return g;
 }
 
-function apply4DFrameAndRender(frameIdx){
-  if(!raw4DSourceFrames || raw4DSourceFrames.length === 0) return;
-  const targetFrame = raw4DSourceFrames[frameIdx % raw4DSourceFrames.length];
-  const src = targetFrame.vertices4D;
-  const cols = targetFrame.colors;
-  
-  const filteredPositions = [];
-  const filteredColors = [];
-  const tupleSize = (src.length % 4 === 0) ? 4 : 3;
-  
-  for(let i=0; i<src.length; i+=tupleSize){
-    let zVal = src[i+2];
-    if(tupleSize === 4){
-      zVal = src[i+2] + (src[i+3] * 0.4);
-    }
-    filteredPositions.push(src[i], src[i+1], zVal * (currentDepthScale / 14));
-    
-    if(cols.length >= (i/tupleSize)*3 + 3){
-      filteredColors.push(cols[(i/tupleSize)*3], cols[(i/tupleSize)*3+1], cols[(i/tupleSize)*3+2]);
-    } else {
-      filteredColors.push(0.35, 0.85, 0.55);
-    }
-  }
-  
-  const posArr = new Float32Array(filteredPositions);
-  const colArr = new Float32Array(filteredColors);
-  const vertexCount = filteredPositions.length / 3;
-  
-  const oldRotation = spatialObject ? spatialObject.rotation.clone() : new THREE.Euler(0, 0, 0);
-  if(spatialObject){ scene.remove(spatialObject); spatialObject.geometry.dispose(); spatialObject.material.dispose(); }
-  
-  const geometry = generateAdvancedVolumetricMesh(vertexCount, posArr, colArr);
-  
-  let mat;
-  if(currentRenderMode === 'solid'){
-    mat = new THREE.MeshStandardMaterial({
-      vertexColors: true,
-      roughness: 0.3,
-      metalness: 0.4,
-      side: THREE.DoubleSide
-    });
-    spatialObject = new THREE.Mesh(geometry, mat);
-  } else if(currentRenderMode === 'wireframe'){
-    mat = new THREE.MeshStandardMaterial({
-      vertexColors: true,
-      wireframe: true,
-      side: THREE.DoubleSide
-    });
-    spatialObject = new THREE.Mesh(geometry, mat);
-  } else if(currentRenderMode === 'toon'){
-    mat = new THREE.MeshToonMaterial({
-      vertexColors: true,
-      side: THREE.DoubleSide
-    });
-    spatialObject = new THREE.Mesh(geometry, mat);
-  } else {
-    mat = new THREE.PointsMaterial({
-      size: 0.04,
-      sizeAttenuation: true,
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.95
-    });
-    spatialObject = new THREE.Points(geometry, mat);
-  }
-  
-  spatialObject.rotation.copy(oldRotation);
-  scene.add(spatialObject);
-  document.getElementById('node-counter').innerText = vertexCount.toLocaleString();
+function handleVideoUpload(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const url = URL.createObjectURL(file);
+  videoElement.src = url;
+  videoElement.load();
+  videoElement.play();
+  logStatus('Loaded custom video file successfully.');
 }
 
-function processEnvironmentData(data){
- try{
-  setProgress(10); appendChat('Synthesizing 4D neural stream into video game world...','system');
-  const seq = extract4DSequence(data);
-  if(seq && seq.length > 0){
-   raw4DSourceFrames = seq;
-   playbackFrames = seq; 
-   playbackFrameIndex = 0; 
-   is4DPlayMode = true;
-   
-   const scrub = document.getElementById('t-scrub-range');
-   if(scrub){ scrub.max = seq.length - 1; scrub.value = 0; }
-   document.getElementById('t-scrub-val').innerText = `0 / ${seq.length - 1}`;
-
-   apply4DFrameAndRender(0);
-   setProgress(100); 
-   document.getElementById('render-status').innerText = 'Standard Orbit 3D'; 
-   document.getElementById('bbox-info').innerText = `${seq.length} game frames parsed`;
-   appendChat(`✓ 3D Game map built successfully from ${seq.length} frames.`,'system'); 
-   if(seq.length <= 250) saveToVault(`GAME_CORE_${Date.now()}`, {HyperStream4D: seq.map(s=>({v:s.vertices4D, c:s.colors}))}); 
-   return;
-  }
-  appendChat('Unrecognized payload format.','error'); setProgress(0);
- }catch(e){appendChat('Map Parsing Error: '+e.message,'error'); setProgress(0); console.error(e)}
+function loadSampleVideo(){
+  videoElement.src = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4';
+  videoElement.load();
+  videoElement.play();
+  logStatus('Loaded sample HD video stream.');
 }
 
-function setupDragDrop(){
-  const dz = document.getElementById('drop-zone'); if(!dz) return; 
-  ['dragenter','dragover'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add('dragover'); })); 
-  ['dragleave','drop'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove('dragover'); })); 
-  dz.addEventListener('drop', e => { const file = e.dataTransfer.files[0]; if(file) readFile(file); });
+function logStatus(msg){
+  const log = document.getElementById('status-log');
+  log.innerHTML += `<div>> ${msg}</div>`;
+  log.scrollTop = log.scrollHeight;
 }
-
-function readFile(file){
-  const r = new FileReader(); 
-  r.onload = ev => { try{ processEnvironmentData(JSON.parse(ev.target.result)); }catch(err){ appendChat('Invalid payload syntax '+err.message,'error'); }}; 
-  r.readAsText(file);
-}
-
-function handleFileUpload(e){ const f = e.target.files[0]; if(f) readFile(f); } 
-function handleCodePaste(){
-  const t = document.getElementById('json-paste-box').value.trim(); 
-  if(!t) return; 
-  try{ processEnvironmentData(JSON.parse(t)); }catch(err){ appendChat('Corrupt paste syntax: '+err.message,'error'); }
-}
-
-function saveToVault(name, payload){
-  try{
-    const raw = JSON.stringify(payload); 
-    if(raw.length > 5000000) return; 
-    const vault = JSON.parse(localStorage.getItem(VAULT_KEY) || '[]'); 
-    vault.unshift({id: Date.now(), name, size: raw.length, payload}); 
-    if(vault.length > 12) vault.pop(); 
-    localStorage.setItem(VAULT_KEY, JSON.stringify(vault)); 
-    loadVaultList();
-  }catch(e){}
-}
-
-function loadVaultList(){
-  try{
-    const vault = JSON.parse(localStorage.getItem(VAULT_KEY) || '[]'); 
-    const list = document.getElementById('vault-list'); 
-    if(vault.length === 0){ list.innerHTML = '<small style="color:#64748b">Empty</small>'; return; } 
-    list.innerHTML = ''; 
-    vault.forEach(it => {
-      const d = document.createElement('div'); 
-      d.className = 'vault-item'; 
-      d.innerHTML = `<span>📦 ${it.name} <small style="color:#64748b">${(it.size/1024).toFixed(0)}KB</small></span><span><button onclick="loadFromVault(${it.id})" style="background:#22c55e;color:#030712;border:none;padding:3px 6px;border-radius:4px;cursor:pointer;font-size:10px;font-weight:700;margin-right:4px">Load</button><button onclick="deleteFromVault(${it.id})" style="background:#334155;color:#fff;border:none;padding:3px 6px;border-radius:4px;cursor:pointer;font-size:10px">X</button></span>`; 
-      list.appendChild(d);
-    });
-  }catch(e){}
-}
-
-function loadFromVault(id){ try{ const vault = JSON.parse(localStorage.getItem(VAULT_KEY) || '[]'); const it = vault.find(v => v.id === id); if(it) processEnvironmentData(it.payload); }catch(e){} } 
-function deleteFromVault(id){ let vault = JSON.parse(localStorage.getItem(VAULT_KEY) || '[]'); vault = vault.filter(v => v.id !== id); localStorage.setItem(VAULT_KEY, JSON.stringify(vault)); loadVaultList(); }
-
-function sendChatMessage(){
-  const i = document.getElementById('chat-input'); 
-  const t = i.value.trim(); 
-  if(!t) return; 
-  appendChat(t); 
-  i.value = '';
-}
-function handleKeyPress(e){ if(e.key === 'Enter') sendChatMessage(); }
 </script>
 </body>
 </html>

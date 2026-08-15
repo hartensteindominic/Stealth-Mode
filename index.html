@@ -3,244 +3,417 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HyperStream3D • 3D Video Processor Studio</title>
+<title>HyperStream5D • Immersive Virtual Spatial Mapping Engine v3</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#030712;color:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;height:100vh;display:flex;overflow:hidden}
-#sidebar{width:420px;min-width:300px;background:#0b0f19;border-right:1px solid #1f2937;display:flex;flex-direction:column;padding:14px;gap:10px;z-index:10;overflow-y:auto}
+#sidebar{width:440px;min-width:320px;background:#0b0f19;border-right:1px solid #1f2937;display:flex;flex-direction:column;padding:14px;gap:10px;z-index:10;overflow-y:auto}
 .brand{font-size:15px;font-weight:800;letter-spacing:1.2px;color:#38bdf8}
-.brand span{background: -webkit-linear-gradient(#3b82f6, #38bdf8, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent;}
+.brand span{background: -webkit-linear-gradient(#38bdf8, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent;}
 .section-card{background:rgba(17,24,39,.7);border:1px solid #1f2937;border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:6px}
 .card-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#94a3b8}
-.upload-section{border:2px dashed #334155;padding:14px;border-radius:10px;text-align:center;background:rgba(255,255,255,.01);cursor:pointer}
-.upload-section.dragover{border-color:#3b82f6;background:rgba(59,130,246,.08)}
-input[type=file]{display:none}
+.action-toggle-row{display:flex;gap:6px}
+.tab-btn{flex:1;padding:8px 4px;background:#1e293b;border:1px solid #334155;border-radius:8px;color:#94a3b8;font-size:11px;font-weight:600;cursor:pointer}
+.tab-btn.active{background:#7c3aed;color:#fff;border-color:#6d28d9}
+.upload-section{border:2px dashed #334155;padding:12px;border-radius:10px;text-align:center;background:rgba(255,255,255,.01);cursor:pointer}
+.upload-section.dragover{border-color:#a855f7;background:rgba(168,85,247,.08)}
+input[type=file]{display:none} textarea{width:100%;height:70px;background:#1e293b;border:1px solid #334155;padding:8px;border-radius:8px;color:#fff;font-family:monospace;font-size:11px;resize:none}
 .layer-control-row{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#cbd5e1}
-input[type=range]{accent-color:#3b82f6;cursor:pointer;width:110px}
-button.primary-btn{background:#3b82f6;color:#ffffff;border:none;padding:8px 12px;border-radius:8px;font-weight:800;cursor:pointer;font-size:11px}
-button.primary-btn:hover{background:#2563eb}
+input[type=range]{accent-color:#a855f7;cursor:pointer;width:110px}
+#chat-container{flex:1;min-height:55px;max-height:85px;background:#1e293b;border-radius:10px;padding:6px;display:flex;flex-direction:column;gap:4px;overflow-y:auto;font-size:11px}
+.chat-message{padding:5px 7px;border-radius:6px;background:#334155;color:#e2e8f0;word-break:break-word}
+.chat-message.system{background:#581c87;color:#e9d5ff}.chat-message.error{background:#7f1d1d;color:#fecaca}
+input[type=text]{flex:1;background:#1e293b;border:1px solid #334155;padding:7px;border-radius:8px;color:#fff;font-size:11px}
+button.primary-btn{background:#7c3aed;color:#fff;border:none;padding:8px 12px;border-radius:8px;font-weight:700;cursor:pointer;font-size:11px}
+button.primary-btn:hover{background:#6d28d9}
+button.danger-btn{background:#dc2626;color:#fff;border:none;padding:8px;border-radius:8px;font-weight:700;cursor:pointer;font-size:11px;width:100%}
 button.secondary-btn{background:#334155;color:#f1f5f9;border:none;padding:8px;border-radius:8px;font-weight:600;cursor:pointer;font-size:11px}
 #viewer-container{flex:1;position:relative;background:radial-gradient(circle at center,#0f172a 0%,#030712 100%)}
 canvas{display:block;width:100%;height:100%}
 .stats-overlay{position:absolute;top:16px;right:16px;background:rgba(3,7,18,.85);backdrop-filter:blur(8px);padding:10px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.08);font-size:11px;color:#94a3b8}
-.stats-overlay span{color:#3b82f6;font-weight:700}
-.progress-bar{height:3px;background:#1e293b;border-radius:1.5px;overflow:hidden;margin-top:3px}
-.progress-fill{height:100%;background:#3b82f6;width:0%;transition:width.2s}
-video{display:none}
+.stats-overlay span{color:#a855f7;font-weight:700}.progress-bar{height:3px;background:#1e293b;border-radius:1.5px;overflow:hidden;margin-top:3px}.progress-fill{height:100%;background:#a855f7;width:0%;transition:width.2s}
+.vault-item{display:flex;justify-content:space-between;align-items:center;background:#1e293b;padding:5px 7px;border-radius:6px;font-size:11px}
+.mapping-node{position:absolute;width:10px;height:10px;background:#38bdf8;border:2px solid #fff;border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;display:none;box-shadow:0 0 10px #38bdf8}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
 </head>
 <body>
 <div id="sidebar">
-<div class="brand">HYPERSTREAM 3D<br><span>VIDEO PROCESSOR SUITE</span></div>
-
-<div class="section-card">
-<div class="card-title">Source Video Input</div>
+<div class="brand">VIRTUAL SPATIAL MAPPER<br><span>HYPERSTREAM 5D VOLUMETRICS v3</span></div>
+<div class="action-toggle-row">
+<button id="btn-tab-file" class="tab-btn active" onclick="switchInputMode('file')">📂 Upload</button>
+<button id="btn-tab-paste" class="tab-btn" onclick="switchInputMode('paste')">📋 Paste Data</button>
+</div>
+<div id="panel-file" class="section-card">
+<div class="card-title">HyperStream5D Input (5th Axis / Meta-Dimension)</div>
 <div id="drop-zone" class="upload-section" onclick="document.getElementById('file-input').click()">
-<span class="upload-label">Drop Video File (.mp4, .webm)<br><small style="opacity:.6">Converts video frames into live 3D depth meshes</small></span>
-<input type="file" id="file-input" accept="video/*" onchange="handleVideoUpload(event)">
+<span class="upload-label">Drop Condensed HyperStream5D Payload<br><small style="opacity:.6">Format: { HyperStream5D: [...] }</small></span>
+<input type="file" id="file-input" accept=".json" onchange="handleFileUpload(event)">
 </div>
-<div style="display:flex;gap:6px">
-  <button class="primary-btn" style="flex:1" id="play-vid-btn" onclick="toggleVideoPlayback()">Play / Pause</button>
-  <button class="secondary-btn" style="flex:1" onclick="loadSampleVideo()">Sample Feed</button>
+<div style="display:flex;gap:6px"><button class="secondary-btn" style="flex:1" onclick="clearScene()">Clear Engine</button><button class="secondary-btn" style="flex:1" onclick="loadVaultList()">Core Vault</button></div>
 </div>
+<div id="panel-paste" class="section-card" style="display:none">
+<div class="card-title">Paste HyperStream5D Node</div>
+<textarea id="json-paste-box" placeholder='Paste payload: {"HyperStream5D":[{"v":[...],"c":[...],"meta":1.0}]}'></textarea>
+<button class="primary-btn" onclick="handleCodePaste()">Process 5D Matrix</button>
 </div>
-
 <div class="section-card">
-<div class="card-title">3D Depth & Displace Shaders</div>
-<div class="layer-control-row"><span>Display Mode</span>
+<div class="card-title">5D Volumetric & Spatial Mapping</div>
+<div class="layer-control-row"><span>Render Mode</span>
   <select id="render-mode-select" onchange="updateRenderMode(this.value)" style="background:#1e293b;color:#fff;border:1px solid #334155;border-radius:6px;padding:3px;font-size:11px;">
-    <option value="textured" selected>Textured 3D Surface</option>
-    <option value="wireframe">Wireframe Depth Map</option>
-    <option value="points">Particle Cloud Matrix</option>
+    <option value="points">Glowing Nodes</option>
+    <option value="solid" selected>Solid Spatial Mesh</option>
+    <option value="wireframe">Wireframe Field</option>
   </select>
 </div>
-<div class="layer-control-row"><span>3D Extrusion Depth</span><input type="range" id="depth-scale-range" min="0.1" max="5.0" step="0.1" value="1.5" oninput="currentDepthScale = parseFloat(this.value)"></div>
-<div class="layer-control-row"><span>Mesh Resolution</span><input type="range" id="res-range" min="32" max="128" step="16" value="64" onchange="rebuildMeshResolution(this.value)"></div>
-<div style="font-size:11px;color:#94a3b8">Active Pixels: <span id="node-counter">0</span><div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div></div>
+<div class="layer-control-row"><span>Meta-Dimension (Axis E)</span><input type="range" id="e-meta-range" min="0" max="100" step="1" value="0" oninput="updateMetaDimension(this.value)"><span id="e-meta-val">0.00</span></div>
+<div class="layer-control-row"><span>Time Scrub (Frame T)</span><input type="range" id="t-scrub-range" min="0" max="100" step="1" value="0" oninput="updateTScrubs(this.value)"><span id="t-scrub-val">0 / 0</span></div>
+<div class="layer-control-row"><span>Spatial Marker Tool</span><button class="primary-btn" style="padding:3px 8px;font-size:10px;" onclick="toggleMappingMode()" id="map-mode-btn">Enable Pinning</button></div>
+<div class="layer-control-row"><span>Grid Matrix</span><input type="checkbox" id="grid-toggle" checked onchange="toggleGrid(this.checked)"></div>
+<div style="font-size:11px;color:#94a3b8">Active Nodes: <span id="node-counter">0</span><div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div></div>
 </div>
-
+<div class="section-card">
+<div class="card-title">Mapped Spatial Pins</div>
+<div id="pins-list" style="display:flex;flex-direction:column;gap:5px;max-height:75px;overflow-y:auto"><small style="color:#64748b">No spatial anchors pinned</small></div>
+</div>
+<div class="section-card">
+<div class="card-title">Vaulted 5D Cores</div>
+<div id="vault-list" style="display:flex;flex-direction:column;gap:5px;max-height:75px;overflow-y:auto"><small style="color:#64748b">Empty</small></div>
+</div>
+<div class="section-card">
+<div class="card-title">Render Media</div>
+<div style="display:flex;flex-direction:column;gap:5px">
+<button class="primary-btn" onclick="exportCurrentPNG()" style="background:#0f766e;">📸 Render 5D Frame</button>
+<button class="primary-btn" onclick="export5DWebMVideo()" style="background:#2563eb;">🎥 Export .webm Stream</button>
+</div>
+</div>
 <div class="section-card" style="flex:1">
-<div class="card-title">Processor Status</div>
-<div id="status-log" style="font-size:11px;color:#94a3b8;font-family:monospace;background:#1e293b;padding:8px;border-radius:8px;height:100px;overflow-y:auto">
-System initialized. Ready for video feed processing.
+<div class="card-title">Systems Console</div>
+<div id="chat-container"><div class="chat-message system">HyperStream5D spatial processor active.</div></div>
+<div style="display:flex;gap:6px;margin-top:2px"><input type="text" id="chat-input" placeholder="Query 5D Matrix..." onkeypress="handleKeyPress(event)"><button class="primary-btn" onclick="sendChatMessage()">Send</button></div>
 </div>
 </div>
-</div>
-
 <div id="viewer-container">
-<div class="stats-overlay">Mode: <span id="render-status">3D Depth Processor</span><br>FPS: <span id="fps-counter">60</span></div>
+<div class="stats-overlay">Status: <span id="render-status">Awaiting 5D Stream</span><br><span id="bbox-info" style="font-size:10px;color:#64748b"></span></div>
+<div id="cursor-pin" class="mapping-node"></div>
 <canvas id="three-canvas"></canvas>
 </div>
-
-<video id="source-video" crossorigin="anonymous" playsinline muted loop></video>
-<canvas id="video-processing-canvas" width="64" height="64" style="display:none"></canvas>
-
 <script>
-let scene, camera, renderer, controls, videoMesh;
-let videoElement, videoCanvas, videoContext;
-let currentDepthScale = 1.5, currentResolution = 64, currentRenderMode = 'textured';
-let texture, geometry, material;
+let scene,camera,renderer,controls,gridHelper,spatialObject=null;
+let currentFPS=18,lastFrameTime=0,is5DPlayMode=true,playbackFrames=[],playbackFrameIndex=0;
+let raw5DSourceFrames=[];
+let currentRenderMode = 'solid';
+let currentMetaValue = 0;
+let isMappingActive = false;
+let mappedPins = [];
+const VAULT_KEY='hyperstream_5d_vault_v3';
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
 
-window.addEventListener('DOMContentLoaded', () => { init3D(); setupDragDrop(); });
+window.addEventListener('DOMContentLoaded',()=>{init3D();setupDragDrop();loadVaultList()});
 
 function init3D(){
-  const container = document.getElementById('viewer-container');
-  scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x030712);
+const c=document.getElementById('viewer-container'); scene=new THREE.Scene();
+camera=new THREE.PerspectiveCamera(55,c.clientWidth/c.clientHeight,0.05,2000); camera.position.set(0,0.2,3.2);
+const canvas=document.getElementById('three-canvas');
+renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,preserveDrawingBuffer:true});
+renderer.setSize(c.clientWidth,c.clientHeight); renderer.setPixelRatio(Math.min(window.devicePixelRatio,2)); renderer.setClearColor(0x030712);
+controls=new THREE.OrbitControls(camera,renderer.domElement); controls.enableDamping=true; controls.dampingFactor=0.08;
+gridHelper=new THREE.GridHelper(30,30,0x1e293b,0x0f172a); gridHelper.position.y=-1.5; scene.add(gridHelper);
 
-  camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
-  camera.position.set(0, 0, 3.5);
+scene.add(new THREE.AmbientLight(0xffffff,0.7)); 
+const d1=new THREE.DirectionalLight(0xffffff,1.0); d1.position.set(2,4,5); scene.add(d1);
+const d2=new THREE.DirectionalLight(0xa855f7,0.5); d2.position.set(-5,-2,-3); scene.add(d2);
 
-  const canvas = document.getElementById('three-canvas');
-  renderer = new THREE.WebGLRenderer({canvas, antialias: true});
-  renderer.setSize(container.clientWidth, container.clientHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-  controls = new THREE.OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.05;
-
-  scene.add(new THREE.AmbientLight(0xffffff, 1.0));
-
-  videoElement = document.getElementById('source-video');
-  videoCanvas = document.getElementById('video-processing-canvas');
-  videoContext = videoCanvas.getContext('2d', { willReadFrequently: true });
-
-  texture = new THREE.VideoTexture(videoElement);
-  texture.minFilter = THREE.LinearFilter;
-  texture.magFilter = THREE.LinearFilter;
-
-  buildVideoMesh(currentResolution);
-
-  window.addEventListener('resize', onWindowResize);
-  animate();
+window.addEventListener('resize',onWindowResize);
+renderer.domElement.addEventListener('click',handleCanvasClick);
+animate();
 }
 
-function buildVideoMesh(res){
-  if(videoMesh){ scene.remove(videoMesh); geometry.dispose(); material.dispose(); }
-
-  currentResolution = res;
-  videoCanvas.width = res;
-  videoCanvas.height = res;
-
-  geometry = new THREE.PlaneGeometry(3, 3, res - 1, res - 1);
-  updateMaterial();
-
-  videoMesh = new THREE.Mesh(geometry, material);
-  scene.add(videoMesh);
-  document.getElementById('node-counter').innerText = (res * res).toLocaleString();
+function animate(now){
+requestAnimationFrame(animate); if(controls)controls.update();
+if(is5DPlayMode && playbackFrames.length>0 && spatialObject && now-lastFrameTime > (1000/currentFPS)){
+apply5DFrameAndRender(playbackFrameIndex, currentMetaValue);
+playbackFrameIndex=(playbackFrameIndex+1)%playbackFrames.length;
+const scrubRange = document.getElementById('t-scrub-range');
+if(scrubRange) scrubRange.value = playbackFrameIndex;
+document.getElementById('t-scrub-val').innerText = `${playbackFrameIndex} / ${playbackFrames.length - 1}`;
+lastFrameTime=now;
+}
+if(renderer&&scene&&camera)renderer.render(scene,camera);
 }
 
-function updateMaterial(){
-  if(material) material.dispose();
+function onWindowResize(){const c=document.getElementById('viewer-container'); if(!c||!camera||!renderer)return; camera.aspect=c.clientWidth/c.clientHeight; camera.updateProjectionMatrix(); renderer.setSize(c.clientWidth,c.clientHeight)}
+function switchInputMode(m){['file','paste'].forEach(x=>{document.getElementById('btn-tab-'+x)?.classList.remove('active'); document.getElementById('panel-'+x).style.display='none'}); document.getElementById('btn-tab-'+m)?.classList.add('active'); document.getElementById('panel-'+m).style.display='flex'}
+function setProgress(p){document.getElementById('progress-fill').style.width=Math.min(100,Math.max(0,p))+'%'}
+function appendChat(t,s=''){const b=document.getElementById('chat-container'); const d=document.createElement('div'); d.className='chat-message '+s; d.innerText=t; b.appendChild(d); b.scrollTop=b.scrollHeight}
+function clearScene(){is5DPlayMode=false; playbackFrames=[]; playbackFrameIndex=0; raw5DSourceFrames=[]; clearPins(); if(spatialObject){scene.remove(spatialObject); spatialObject.geometry.dispose(); spatialObject.material.dispose(); spatialObject=null} document.getElementById('node-counter').innerText='0'; document.getElementById('render-status').innerText='Matrix Cleared'; document.getElementById('bbox-info').innerText=''; setProgress(0)}
+function toggleGrid(v){if(gridHelper)gridHelper.visible=v}
+function updateRenderMode(m){currentRenderMode = m; if(raw5DSourceFrames.length > 0) apply5DFrameAndRender(playbackFrameIndex, currentMetaValue);}
 
-  if(currentRenderMode === 'textured'){
-    material = new THREE.MeshStandardMaterial({
-      map: texture,
-      roughness: 0.4,
+function updateMetaDimension(val){
+  currentMetaValue = parseFloat(val) / 100.0;
+  document.getElementById('e-meta-val').innerText = currentMetaValue.toFixed(2);
+  is5DPlayMode = false;
+  if(raw5DSourceFrames.length > 0){
+    apply5DFrameAndRender(playbackFrameIndex, currentMetaValue);
+  }
+}
+
+function updateTScrubs(val){
+  playbackFrameIndex = parseInt(val);
+  is5DPlayMode = false;
+  if(raw5DSourceFrames.length > 0){
+    apply5DFrameAndRender(playbackFrameIndex, currentMetaValue);
+    document.getElementById('t-scrub-val').innerText = `${playbackFrameIndex} / ${playbackFrames.length - 1}`;
+  }
+}
+
+function toNumberArray(arr){
+ if(!arr) return []; const out=[]; for(let i=0;i<arr.length;i++){const n=parseFloat(arr[i]); if(isFinite(n)) out.push(n);} return out;
+}
+
+function extract5DSequence(data){
+ if(!data) return null;
+ let raw = data.HyperStream5D || data.HyperStream4D || data.hyperStream || data.condensedNodes || (Array.isArray(data) ? data : null);
+ if(!raw) return null;
+ return raw.map(f=>{
+  let v = f.v || f.vertices || [];
+  let c = f.c || f.colors || [];
+  let meta = f.meta !== undefined ? f.meta : (f.m !== undefined ? f.m : Math.random());
+  return {vertices: toNumberArray(v), colors: toNumberArray(c), meta: toNumberArray(meta)};
+ }).filter(f=>f.vertices.length > 0);
+}
+
+function getMeshIndices(count){
+  const indices = [];
+  const side = Math.round(Math.sqrt(count));
+  if(side > 5){
+    for (let i = 0; i < count - side - 1; i++) {
+      if ((i + 1) % side !== 0) {
+        indices.push(i, i + 1, i + side);
+        indices.push(i + 1, i + side + 1, i + side);
+      }
+    }
+  }
+  return indices;
+}
+
+function apply5DFrameAndRender(frameIdx, metaBlend){
+  if(!raw5DSourceFrames || raw5DSourceFrames.length === 0) return;
+  const targetFrame = raw5DSourceFrames[frameIdx % raw5DSourceFrames.length];
+  const src = targetFrame.vertices;
+  const cols = targetFrame.colors;
+  
+  const filteredPositions = [];
+  const filteredColors = [];
+  const tupleSize = (src.length % 4 === 0) ? 4 : 3;
+  
+  for(let i=0; i<src.length; i+=tupleSize){
+    // Apply 5D meta-modulation shift dynamically based on Axis E slider value
+    const metaOffset = (targetFrame.meta[Math.floor(i/tupleSize)] || 0.5) * metaBlend * 0.4;
+    filteredPositions.push(src[i], src[i+1] + metaOffset, src[i+2]);
+    if(cols.length >= (i/tupleSize)*3 + 3){
+      filteredColors.push(cols[(i/tupleSize)*3], cols[(i/tupleSize)*3+1], cols[(i/tupleSize)*3+2]);
+    } else {
+      filteredColors.push(0.65, 0.45, 0.85);
+    }
+  }
+  
+  const posArr = new Float32Array(filteredPositions);
+  const colArr = new Float32Array(filteredColors);
+  
+  if(spatialObject){scene.remove(spatialObject); spatialObject.geometry.dispose(); spatialObject.material.dispose();}
+  
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
+  g.setAttribute('color', new THREE.BufferAttribute(colArr, 3));
+  
+  if(currentRenderMode === 'solid' || currentRenderMode === 'wireframe'){
+    const indices = getMeshIndices(filteredPositions.length / 3);
+    if(indices.length > 0) g.setIndex(indices);
+    g.computeVertexNormals();
+    
+    const mat = new THREE.MeshStandardMaterial({
+      vertexColors: true,
+      roughness: 0.35,
       metalness: 0.2,
-      side: THREE.DoubleSide,
-      wireframe: false
-    });
-  } else if(currentRenderMode === 'wireframe'){
-    material = new THREE.MeshBasicMaterial({
-      map: texture,
-      wireframe: true,
+      wireframe: currentRenderMode === 'wireframe',
       side: THREE.DoubleSide
     });
+    spatialObject = new THREE.Mesh(g, mat);
   } else {
-    material = new THREE.PointsMaterial({
-      size: 0.03,
-      map: texture,
-      vertexColors: false,
-      transparent: true
+    const mat = new THREE.PointsMaterial({
+      size: 0.04,
+      sizeAttenuation: true,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.95
     });
+    spatialObject = new THREE.Points(g, mat);
   }
+  
+  spatialObject.rotation.y = Math.PI; 
+  scene.add(spatialObject);
+  document.getElementById('node-counter').innerText = (filteredPositions.length/3).toLocaleString();
 }
 
-function updateRenderMode(mode){
-  currentRenderMode = mode;
-  updateMaterial();
-  if(videoMesh) videoMesh.material = material;
-}
+function processEnvironmentData(data){
+ try{
+  setProgress(10); appendChat('Injecting 5D spatial environment stream...','system');
+  const seq = extract5DSequence(data);
+  if(seq && seq.length > 0){
+   raw5DSourceFrames = seq;
+   playbackFrames = seq; 
+   playbackFrameIndex = 0; 
+   is5DPlayMode = true;
+   
+   const scrub = document.getElementById('t-scrub-range');
+   if(scrub){ scrub.max = seq.length - 1; scrub.value = 0; }
+   document.getElementById('t-scrub-val').innerText = `0 / ${seq.length - 1}`;
 
-function rebuildMeshResolution(val){
-  buildVideoMesh(parseInt(val));
-}
-
-function animate(){
-  requestAnimationFrame(animate);
-
-  if(videoElement.readyState === videoElement.HAVE_ENOUGH_DATA && !videoElement.paused){
-    videoContext.drawImage(videoElement, 0, 0, currentResolution, currentResolution);
-    const imgData = videoContext.getImageData(0, 0, currentResolution, currentResolution).data;
-    const positions = geometry.attributes.position;
-
-    // Displace vertices based on perceived luminance (pseudo-depth processor)
-    for(let i = 0; i < positions.count; i++){
-      const x = i % currentResolution;
-      const y = Math.floor(i / currentResolution);
-      const pixelIndex = (y * currentResolution + x) * 4;
-      
-      const r = imgData[pixelIndex];
-      const g = imgData[pixelIndex + 1];
-      const b = imgData[pixelIndex + 2];
-      const luminance = (r * 0.299 + g * 0.587 + b * 0.114) / 255;
-
-      const originalZ = 0; 
-      positions.setZ(i, originalZ + (luminance * currentDepthScale - (currentDepthScale / 2)));
-    }
-    positions.needsUpdate = true;
-    geometry.computeVertexNormals();
+   apply5DFrameAndRender(0, currentMetaValue);
+   setProgress(100); 
+   document.getElementById('render-status').innerText='HyperStream5D Active'; 
+   document.getElementById('bbox-info').innerText=`${seq.length} temporal sequences parsed`;
+   appendChat(`✓ 5D environment mapped successfully. Ready.`,'system'); 
+   if(seq.length < 150) saveToVault(`CORE_5D_${Date.now()}`,{HyperStream5D:seq}); 
+   return;
   }
-
-  if(controls) controls.update();
-  if(renderer && scene && camera) renderer.render(scene, camera);
+  appendChat('Unrecognized 5D payload format.','error'); setProgress(0);
+ }catch(e){appendChat('Matrix Parsing Error: '+e.message,'error'); setProgress(0); console.error(e)}
 }
 
-function onWindowResize(){
-  const container = document.getElementById('viewer-container');
-  if(!container || !camera || !renderer) return;
-  camera.aspect = container.clientWidth / container.clientHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(container.clientWidth, container.clientHeight);
-}
+function setupDragDrop(){const dz=document.getElementById('drop-zone'); if(!dz)return; ['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault(); dz.classList.add('dragover')})); ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault(); dz.classList.remove('dragover')})); dz.addEventListener('drop',e=>{const file=e.dataTransfer.files[0]; if(file) readFile(file)})}
+function readFile(file){const r=new FileReader(); r.onload=ev=>{try{processEnvironmentData(JSON.parse(ev.target.result))}catch(err){appendChat('Invalid core payload '+err.message,'error')}}; r.readAsText(file)}
+function handleFileUpload(e){const f=e.target.files[0]; if(f) readFile(f)} 
+function handleCodePaste(){const t=document.getElementById('json-paste-box').value.trim(); if(!t)return; try{processEnvironmentData(JSON.parse(t))}catch(err){appendChat('Corrupt paste syntax: '+err.message,'error')}}
 
-function toggleVideoPlayback(){
-  if(videoElement.paused){
-    videoElement.play().then(() => {
-      logStatus('Video stream playing. Processing 3D depth fields.');
-    }).catch(e => logStatus('Playback error: ' + e.message));
+function toggleMappingMode(){
+  isMappingActive = !isMappingActive;
+  const btn = document.getElementById('map-mode-btn');
+  if(isMappingActive){
+    btn.style.background = '#059669';
+    btn.innerText = 'Pinning Active';
+    appendChat('Spatial Mapping Pin tool enabled. Click on surface to anchor points.', 'system');
   } else {
-    videoElement.pause();
-    logStatus('Video paused.');
+    btn.style.background = '#7c3aed';
+    btn.innerText = 'Enable Pinning';
+    appendChat('Spatial Mapping Pin tool disabled.', 'system');
   }
 }
 
-function handleVideoUpload(e){
-  const file = e.target.files[0];
-  if(!file) return;
-  const url = URL.createObjectURL(file);
-  videoElement.src = url;
-  videoElement.load();
-  videoElement.play();
-  logStatus('Loaded custom video file successfully.');
+function handleCanvasClick(event){
+  if(!isMappingActive || !spatialObject) return;
+  const rect = renderer.domElement.getBoundingClientRect();
+  mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+  
+  raycaster.setFromCamera(mouse, camera);
+  const intersects = raycaster.intersectObject(spatialObject);
+  
+  if(intersects.length > 0){
+    const point = intersects[0].point;
+    addSpatialPin(point);
+  }
 }
 
-function loadSampleVideo(){
-  videoElement.src = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4';
-  videoElement.load();
-  videoElement.play();
-  logStatus('Loaded sample HD video stream.');
+function addSpatialPin(vec){
+  const pinId = mappedPins.length + 1;
+  mappedPins.push({id: pinId, vector: vec, meta: currentMetaValue});
+  renderPinsList();
+  appendChat(`✓ Spatial Anchor Pin #${pinId} mapped at [${vec.x.toFixed(2)}, ${vec.y.toFixed(2)}, ${vec.z.toFixed(2)}]`, 'system');
 }
 
-function logStatus(msg){
-  const log = document.getElementById('status-log');
-  log.innerHTML += `<div>> ${msg}</div>`;
-  log.scrollTop = log.scrollHeight;
+function clearPins(){
+  mappedPins = [];
+  renderPinsList();
 }
+
+function renderPinsList(){
+  const list = document.getElementById('pins-list');
+  if(mappedPins.length === 0){
+    list.innerHTML = '<small style="color:#64748b">No spatial anchors pinned</small>';
+    return;
+  }
+  list.innerHTML = '';
+  mappedPins.forEach(p => {
+    const d = document.createElement('div');
+    d.className = 'vault-item';
+    d.innerHTML = `<span>📌 Pin #${p.id} <small style="color:#38bdf8">[${p.vector.x.toFixed(1)}, ${p.vector.y.toFixed(1)}]</small></span><span><button onclick="removePin(${p.id})" style="background:#dc2626;color:#fff;border:none;padding:3px 6px;border-radius:4px;cursor:pointer;font-size:10px">X</button></span>`;
+    list.appendChild(d);
+  });
+}
+
+function removePin(id){
+  mappedPins = mappedPins.filter(p => p.id !== id);
+  renderPinsList();
+}
+
+function saveToVault(name,payload){try{const raw=JSON.stringify(payload); if(raw.length>4500000){appendChat('Vault bypass >4.5MB','error'); return;} const vault=JSON.parse(localStorage.getItem(VAULT_KEY)||'[]'); vault.unshift({id:Date.now(),name,size:raw.length,payload}); if(vault.length>12) vault.pop(); localStorage.setItem(VAULT_KEY,JSON.stringify(vault)); loadVaultList()}catch(e){}}
+function loadVaultList(){try{const vault=JSON.parse(localStorage.getItem(VAULT_KEY)||'[]'); const list=document.getElementById('vault-list'); if(vault.length===0){list.innerHTML='<small style="color:#64748b">Empty</small>'; return;} list.innerHTML=''; vault.forEach(it=>{const d=document.createElement('div'); d.className='vault-item'; d.innerHTML=`<span>📦 ${it.name} <small style="color:#64748b">${(it.size/1024).toFixed(0)}KB</small></span><span><button onclick="loadFromVault(${it.id})" style="background:#7c3aed;color:#fff;border:none;padding:3px 6px;border-radius:4px;cursor:pointer;font-size:10px;margin-right:4px">Boot</button><button onclick="deleteFromVault(${it.id})" style="background:#334155;color:#fff;border:none;padding:3px 6px;border-radius:4px;cursor:pointer;font-size:10px">X</button></span>`; list.appendChild(d)})}catch(e){}}
+function loadFromVault(id){try{const vault=JSON.parse(localStorage.getItem(VAULT_KEY)||'[]'); const it=vault.find(v=>v.id===id); if(it) processEnvironmentData(it.payload)}catch(e){}} 
+function deleteFromVault(id){let vault=JSON.parse(localStorage.getItem(VAULT_KEY)||'[]'); vault=vault.filter(v=>v.id!==id); localStorage.setItem(VAULT_KEY,JSON.stringify(vault)); loadVaultList()}
+
+function exportCurrentPNG(){if(!spatialObject){appendChat('No 5D map rendered','error');return;} renderer.render(scene,camera); const url=document.getElementById('three-canvas').toDataURL('image/png'); const a=document.createElement('a'); a.href=url; a.download=`hyperstream_5d_snap_${Date.now()}.png`; a.click(); appendChat('5D high-res snapshot exported','system')}
+
+function export5DWebMVideo(){
+    if(!renderer || !spatialObject){
+        appendChat('No active 5D spatial environment stream to encode.', 'error');
+        return;
+    }
+    appendChat('Compiling 5D spatial stream multiplex (.webm)...', 'system');
+    let recordedChunks = [];
+    const canvas = document.getElementById('three-canvas');
+    const stream = canvas.captureStream(30); 
+    let mediaRecorder;
+    try {
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
+    } catch (e) {
+        try {
+            mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+        } catch (err) {
+            appendChat('Media codec rejected by environment.', 'error');
+            return;
+        }
+    }
+    mediaRecorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+            recordedChunks.push(event.data);
+        }
+    };
+    mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download=`hyperstream_5d_vid_${Date.now()}.webm`;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+        appendChat('✓ 5D Spatial Stream exported successfully!', 'system');
+    };
+    mediaRecorder.start();
+    let frameCounter = 0;
+    const totalFrames = Math.max(90, playbackFrames.length);
+    const originalPos = camera.position.clone();
+    function recordVideoLoop(){
+        frameCounter++;
+        renderer.render(scene, camera);
+        if(frameCounter < totalFrames){
+            requestAnimationFrame(recordVideoLoop);
+        } else {
+            camera.position.copy(originalPos);
+            controls.update();
+            mediaRecorder.stop();
+        }
+    }
+    recordVideoLoop();
+}
+
+function sendChatMessage(){const i=document.getElementById('chat-input'); const t=i.value.trim(); if(!t)return; appendChat(t); i.value='';}
+function handleKeyPress(e){if(e.key==='Enter') sendChatMessage()}
 </script>
 </body>
 </html>

@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HyperStream4D • Enhanced Spatial Mapping & 3D Video Generator v3</title>
+<title>HyperStream4D • Neural Volumetric 3D Environment Studio v4</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#030712;color:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;height:100vh;display:flex;overflow:hidden}
 #sidebar{width:460px;min-width:320px;background:#0b0f19;border-right:1px solid #1f2937;display:flex;flex-direction:column;padding:14px;gap:10px;z-index:10;overflow-y:auto}
 .brand{font-size:15px;font-weight:800;letter-spacing:1.2px;color:#38bdf8}
-.brand span{background: -webkit-linear-gradient(#7dd3fc, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;}
+.brand span{background: -webkit-linear-gradient(#38bdf8, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent;}
 .section-card{background:rgba(17,24,39,.7);border:1px solid #1f2937;border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:6px}
 .card-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#94a3b8}
 .action-toggle-row{display:flex;gap:6px}
@@ -39,97 +39,99 @@ canvas{display:block;width:100%;height:100%}
 </head>
 <body>
 <div id="sidebar">
-<div class="brand">SPATIAL MAPPING PROCESSOR<br><span>HYPERSTREAM 4D ➔ 3D VIDEO STUDIO v3</span></div>
+<div class="brand">HYPERSTREAM 4D STUDIO<br><span>ADVANCED 3D ENVIRONMENT BUILDER v4</span></div>
 
 <div class="action-toggle-row">
 <button id="btn-tab-file" class="tab-btn active" onclick="switchInputMode('file')">📂 Upload</button>
 <button id="btn-tab-paste" class="tab-btn" onclick="switchInputMode('paste')">📋 Paste Data</button>
-<button id="btn-tab-code" class="tab-btn" onclick="switchInputMode('code')">⚙️ Editor</button>
+<button id="btn-tab-code" class="tab-btn" onclick="switchInputMode('code')">⚙️ Script Engine</button>
 </div>
 
 <div id="panel-file" class="section-card">
-<div class="card-title">HyperStream4D Stream Input</div>
+<div class="card-title">4D Neural Stream Payload</div>
 <div id="drop-zone" class="upload-section" onclick="document.getElementById('file-input').click()">
-<span class="upload-label">Drop 4D Stream Payload (.json)<br><small style="opacity:.6">Format: { HyperStream4D: [...] }</small></span>
+<span class="upload-label">Drop 4D Stream JSON (.json)<br><small style="opacity:.6">Format: { HyperStream4D: [...] }</small></span>
 <input type="file" id="file-input" accept=".json" onchange="handleFileUpload(event)">
 </div>
-<div style="display:flex;gap:6px"><button class="secondary-btn" style="flex:1" onclick="clearScene()">Clear Engine</button><button class="secondary-btn" style="flex:1" onclick="loadVaultList()">Core Vault</button></div>
+<div style="display:flex;gap:6px"><button class="secondary-btn" style="flex:1" onclick="clearScene()">Clear Matrix</button><button class="secondary-btn" style="flex:1" onclick="loadVaultList()">Vault Cores</button></div>
 </div>
 
 <div id="panel-paste" class="section-card" style="display:none">
-<div class="card-title">Paste HyperStream4D Node</div>
+<div class="card-title">Paste 4D Sequence Node</div>
 <textarea id="json-paste-box" placeholder='Paste payload: {"HyperStream4D":[{"v":[...],"c":[...]}]}'></textarea>
-<button class="primary-btn" onclick="handleCodePaste()">Process Data Core</button>
+<button class="primary-btn" onclick="handleCodePaste()">Process Neural Core</button>
 </div>
 
 <div id="panel-code" class="section-card" style="display:none">
-<div class="card-title">Live Code Upgrader & Script Injector</div>
-<textarea id="runtime-code-box" style="height:90px;font-size:10px">// Modify core transformation behavior on the fly
-spatialObject.rotation.y += 0.01;
-// spatialObject.scale.setScalar(1.2);
+<div class="card-title">Live 3D Customizer Script</div>
+<textarea id="runtime-code-box" style="height:90px;font-size:10px">// Dynamic transformation per animation tick
+spatialObject.rotation.y += 0.008;
+// spatialObject.position.y = Math.sin(Date.now() * 0.002) * 0.2;
 </textarea>
-<button class="primary-btn" onclick="applyRuntimePatch()" style="background:#059669;">Execute Code Upgrade</button>
+<button class="primary-btn" onclick="applyRuntimePatch()" style="background:#059669;">Inject Code Matrix</button>
 </div>
 
 <div class="section-card">
-<div class="card-title">Volumetric & Orbit Studio Controls</div>
-<div class="layer-control-row"><span>Render Mode</span>
+<div class="card-title">Advanced 3D Environment Controls</div>
+<div class="layer-control-row"><span>Mesh Topology Mode</span>
   <select id="render-mode-select" onchange="updateRenderMode(this.value)" style="background:#1e293b;color:#fff;border:1px solid #334155;border-radius:6px;padding:3px;font-size:11px;">
-    <option value="points">Glowing Points</option>
-    <option value="solid" selected>Solid Volumetric Mesh</option>
-    <option value="wireframe">Wireframe Mesh</option>
+    <option value="points">Glowing Particle Cloud</option>
+    <option value="solid" selected>Volumetric Smooth Surface</option>
+    <option value="wireframe">Geometric Wireframe Mesh</option>
+    <option value="toon">Cel-Shaded Stylized 3D</option>
   </select>
 </div>
-<div class="layer-control-row"><span>Auto-Spin 3D Turntable</span><input type="checkbox" id="autospin-toggle" checked onchange="toggleAutospin(this.checked)"></div>
-<div class="layer-control-row"><span>Time Scrub (Frame T)</span><input type="range" id="t-scrub-range" min="0" max="100" step="1" value="0" oninput="updateTScrubs(this.value)"><span id="t-scrub-val">0 / 0</span></div>
-<div class="layer-control-row"><span>Depth Scale Z</span><input type="range" id="depth-scale-range" min="1" max="25" step="0.5" value="12" oninput="updateDepthScale(this.value)"></div>
-<div class="layer-control-row"><span>Playback FPS</span><input type="range" id="fps-range" min="1" max="30" step="1" value="18" oninput="updateFPS(this.value)"><span id="fps-label">18</span></div>
-<div class="layer-control-row"><span>Grid Matrix</span><input type="checkbox" id="grid-toggle" checked onchange="toggleGrid(this.checked)"></div>
-<div style="font-size:11px;color:#94a3b8">Data Nodes: <span id="node-counter">0</span><div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div></div>
+<div class="layer-control-row"><span>Environment Bloom FX</span><input type="checkbox" id="bloom-toggle" checked onchange="toggleBloom(this.checked)"></div>
+<div class="layer-control-row"><span>Auto-Spin Turntable</span><input type="checkbox" id="autospin-toggle" checked onchange="toggleAutospin(this.checked)"></div>
+<div class="layer-control-row"><span>Temporal Scrub (Frame T)</span><input type="range" id="t-scrub-range" min="0" max="100" step="1" value="0" oninput="updateTScrubs(this.value)"><span id="t-scrub-val">0 / 0</span></div>
+<div class="layer-control-row"><span>Volumetric Depth Z</span><input type="range" id="depth-scale-range" min="1" max="30" step="0.5" value="14" oninput="updateDepthScale(this.value)"></div>
+<div class="layer-control-row"><span>Playback FPS</span><input type="range" id="fps-range" min="1" max="30" step="1" value="20" oninput="updateFPS(this.value)"><span id="fps-label">20</span></div>
+<div class="layer-control-row"><span>Perspective Grid</span><input type="checkbox" id="grid-toggle" checked onchange="toggleGrid(this.checked)"></div>
+<div style="font-size:11px;color:#94a3b8">Active Vertices: <span id="node-counter">0</span><div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div></div>
 </div>
 
 <div class="section-card">
-<div class="card-title">Vaulted 3D Environment Cores</div>
+<div class="card-title">Vaulted Environment Cores</div>
 <div id="vault-list" style="display:flex;flex-direction:column;gap:5px;max-height:70px;overflow-y:auto"><small style="color:#64748b">Empty</small></div>
 </div>
 
 <div class="section-card">
-<div class="card-title">Render & Save Studio Media</div>
+<div class="card-title">Studio Rendering Suite</div>
 <div style="display:flex;flex-direction:column;gap:5px">
-<button class="primary-btn" onclick="exportCurrentPNG()" style="background:#0f766e;">📸 Render Hi-Res Frame</button>
-<button class="primary-btn" onclick="export3DTurntableGIF()" style="background:#7c3aed;">Render 3D Turntable (GIF)</button>
-<button class="primary-btn" onclick="export3DStreamWebM()" style="background:#2563eb;">🎥 Export Full 3D Video (.webm)</button>
+<button class="primary-btn" onclick="exportCurrentPNG()" style="background:#0f766e;">📸 Render 4K Photo Frame</button>
+<button class="primary-btn" onclick="export3DTurntableGIF()" style="background:#7c3aed;">Render Turntable Matrix (GIF)</button>
+<button class="primary-btn" onclick="export3DStreamWebM()" style="background:#2563eb;">🎥 Export 3D Video Sequence (.webm)</button>
 </div>
 </div>
 
 <div class="section-card" style="flex:1">
-<div class="card-title">Systems Console</div>
-<div id="chat-container"><div class="chat-message system">HyperStream4D v3 3D-Video Environment active.</div></div>
-<div style="display:flex;gap:6px;margin-top:2px"><input type="text" id="chat-input" placeholder="Query Matrix..." onkeypress="handleKeyPress(event)"><button class="primary-btn" onclick="sendChatMessage()">Send</button></div>
+<div class="card-title">Console Diagnostics</div>
+<div id="chat-container"><div class="chat-message system">HyperStream4D v4 volumetric engine standing by.</div></div>
+<div style="display:flex;gap:6px;margin-top:2px"><input type="text" id="chat-input" placeholder="Query 3D environment..." onkeypress="handleKeyPress(event)"><button class="primary-btn" onclick="sendChatMessage()">Send</button></div>
 </div>
 </div>
 
 <div id="viewer-container">
-<div class="stats-overlay">Status: <span id="render-status">Awaiting 4D Stream Input</span><br><span id="bbox-info" style="font-size:10px;color:#64748b"></span></div>
+<div class="stats-overlay">Environment: <span id="render-status">Awaiting 4D Data Stream</span><br><span id="bbox-info" style="font-size:10px;color:#64748b"></span></div>
 <canvas id="three-canvas"></canvas>
 </div>
 
 <script>
 let scene, camera, renderer, controls, gridHelper, spatialObject = null;
-let currentDepthScale = 12, currentFPS = 18, lastFrameTime = 0;
-let is4DPlayMode = true, isAutoSpin = true, playbackFrames = [], playbackFrameIndex = 0;
+let currentDepthScale = 14, currentFPS = 20, lastFrameTime = 0;
+let is4DPlayMode = true, isAutoSpin = true, isBloomEnabled = true, playbackFrames = [], playbackFrameIndex = 0;
 let raw4DSourceFrames = [], currentRenderMode = 'solid';
 let mediaRecorder, recordedChunks = [];
 let customUserTransformScript = null;
-const VAULT_KEY = 'hyperstream_4d_vault_v3';
+const VAULT_KEY = 'hyperstream_4d_vault_v4';
 
 window.addEventListener('DOMContentLoaded', () => { init3D(); setupDragDrop(); loadVaultList(); });
 
 function init3D(){
   const c = document.getElementById('viewer-container'); 
   scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(55, c.clientWidth / c.clientHeight, 0.05, 2000); 
-  camera.position.set(0, 0.2, 3.2);
+  camera = new THREE.PerspectiveCamera(50, c.clientWidth / c.clientHeight, 0.05, 2000); 
+  camera.position.set(0, 0.4, 3.5);
   
   const canvas = document.getElementById('three-canvas');
   renderer = new THREE.WebGLRenderer({canvas, antialias: true, alpha: false, preserveDrawingBuffer: true});
@@ -141,13 +143,15 @@ function init3D(){
   controls.enableDamping = true; 
   controls.dampingFactor = 0.08;
   
-  gridHelper = new THREE.GridHelper(30, 30, 0x1e293b, 0x0f172a); 
-  gridHelper.position.y = -1.5; 
+  gridHelper = new THREE.GridHelper(35, 35, 0x38bdf8, 0x0f172a); 
+  gridHelper.position.y = -1.8; 
   scene.add(gridHelper);
 
-  scene.add(new THREE.AmbientLight(0xffffff, 0.7)); 
-  const d1 = new THREE.DirectionalLight(0xffffff, 1.0); d1.position.set(2, 4, 5); scene.add(d1);
-  const d2 = new THREE.DirectionalLight(0x818cf8, 0.5); d2.position.set(-5, -2, -3); scene.add(d2);
+  // Enhanced Multi-Point Studio Lighting Setup for Superior 3D Form Definition
+  scene.add(new THREE.AmbientLight(0xffffff, 0.6)); 
+  const keyLight = new THREE.DirectionalLight(0xffffff, 1.2); keyLight.position.set(4, 6, 5); scene.add(keyLight);
+  const fillLight = new THREE.DirectionalLight(0x38bdf8, 0.6); fillLight.position.set(-5, -2, -3); scene.add(fillLight);
+  const rimLight = new THREE.DirectionalLight(0xc084fc, 0.8); rimLight.position.set(0, 5, -5); scene.add(rimLight);
 
   window.addEventListener('resize', onWindowResize); 
   animate();
@@ -157,17 +161,14 @@ function animate(now){
   requestAnimationFrame(animate); 
   if(controls) controls.update();
   
-  // Turntable spin effect in 3D environment
   if(isAutoSpin && spatialObject){
-    spatialObject.rotation.y += 0.005;
+    spatialObject.rotation.y += 0.004;
   }
 
-  // Run custom upgraded user transformation script if present
   if(customUserTransformScript && spatialObject){
     try { customUserTransformScript(); } catch(e){}
   }
 
-  // 4D temporal frame progression
   if(is4DPlayMode && playbackFrames.length > 0 && spatialObject && now - lastFrameTime > (1000 / currentFPS)){
     apply4DFrameAndRender(playbackFrameIndex);
     playbackFrameIndex = (playbackFrameIndex + 1) % playbackFrames.length;
@@ -216,11 +217,11 @@ function clearScene(){
   setProgress(0);
 }
 
-function updatePointSize(v){ if(spatialObject && currentRenderMode==='points') spatialObject.material.size = parseFloat(v); } 
-function updateDepthScale(v){ currentDepthScale = parseFloat(v); } 
+function updateDepthScale(v){ currentDepthScale = parseFloat(v); if(raw4DSourceFrames.length > 0) apply4DFrameAndRender(playbackFrameIndex); } 
 function updateFPS(v){ currentFPS = parseInt(v); document.getElementById('fps-label').innerText = v; } 
 function toggleGrid(v){ if(gridHelper) gridHelper.visible = v; }
 function toggleAutospin(v){ isAutoSpin = v; }
+function toggleBloom(v){ isBloomEnabled = v; }
 function updateRenderMode(m){ currentRenderMode = m; if(raw4DSourceFrames.length > 0) apply4DFrameAndRender(playbackFrameIndex); }
 
 function updateTScrubs(val){
@@ -247,18 +248,33 @@ function extract4DSequence(data){
  }).filter(f => f.vertices4D.length > 0);
 }
 
-function getMeshIndices(count){
+// Upgraded Delaunay-style grid triangulation and surface interpolation for 4D-to-3D volumetric topology
+function generateAdvancedVolumetricMesh(count, positions, colors){
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  g.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  
+  const numVertices = count;
+  const side = Math.round(Math.sqrt(numVertices));
   const indices = [];
-  const side = Math.round(Math.sqrt(count));
+
   if(side > 3){
-    for (let i = 0; i < count - side - 1; i++) {
+    for (let i = 0; i < numVertices - side - 1; i++) {
       if ((i + 1) % side !== 0) {
         indices.push(i, i + 1, i + side);
         indices.push(i + 1, i + side + 1, i + side);
       }
     }
+  } else {
+    // Fallback triangulation for irregular point clouds
+    for(let i = 0; i < numVertices - 2; i += 3){
+      indices.push(i, i+1, i+2);
+    }
   }
-  return indices;
+  
+  if(indices.length > 0) g.setIndex(indices);
+  g.computeVertexNormals();
+  return g;
 }
 
 function apply4DFrameAndRender(frameIdx){
@@ -272,56 +288,73 @@ function apply4DFrameAndRender(frameIdx){
   const tupleSize = (src.length % 4 === 0) ? 4 : 3;
   
   for(let i=0; i<src.length; i+=tupleSize){
-    filteredPositions.push(src[i], src[i+1], src[i+2] * (currentDepthScale / 12));
+    // Map 4th dimension temporal/spatial depth smoothly to Z coordinate scale
+    let zVal = src[i+2];
+    if(tupleSize === 4){
+      zVal = src[i+2] + (src[i+3] * 0.4);
+    }
+    filteredPositions.push(src[i], src[i+1], zVal * (currentDepthScale / 14));
+    
     if(cols.length >= (i/tupleSize)*3 + 3){
       filteredColors.push(cols[(i/tupleSize)*3], cols[(i/tupleSize)*3+1], cols[(i/tupleSize)*3+2]);
     } else {
-      filteredColors.push(0.85, 0.68, 0.55);
+      filteredColors.push(0.55, 0.75, 0.95);
     }
   }
   
   const posArr = new Float32Array(filteredPositions);
   const colArr = new Float32Array(filteredColors);
+  const vertexCount = filteredPositions.length / 3;
   
   const oldRotation = spatialObject ? spatialObject.rotation.clone() : new THREE.Euler(0, Math.PI, 0);
   if(spatialObject){ scene.remove(spatialObject); spatialObject.geometry.dispose(); spatialObject.material.dispose(); }
   
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.BufferAttribute(posArr, 3));
-  g.setAttribute('color', new THREE.BufferAttribute(colArr, 3));
+  const geometry = generateAdvancedVolumetricMesh(vertexCount, posArr, colArr);
   
-  if(currentRenderMode === 'solid' || currentRenderMode === 'wireframe'){
-    const indices = getMeshIndices(filteredPositions.length / 3);
-    if(indices.length > 0) g.setIndex(indices);
-    g.computeVertexNormals();
-    
-    const mat = new THREE.MeshStandardMaterial({
+  let mat;
+  if(currentRenderMode === 'solid'){
+    mat = new THREE.MeshStandardMaterial({
       vertexColors: true,
-      roughness: 0.35,
-      metalness: 0.2,
-      wireframe: currentRenderMode === 'wireframe',
+      roughness: 0.25,
+      metalness: 0.3,
+      emissive: isBloomEnabled ? 0x111827 : 0x000000,
+      emissiveIntensity: 0.2,
       side: THREE.DoubleSide
     });
-    spatialObject = new THREE.Mesh(g, mat);
+    spatialObject = new THREE.Mesh(geometry, mat);
+  } else if(currentRenderMode === 'wireframe'){
+    mat = new THREE.MeshStandardMaterial({
+      vertexColors: true,
+      wireframe: true,
+      roughness: 0.2,
+      side: THREE.DoubleSide
+    });
+    spatialObject = new THREE.Mesh(geometry, mat);
+  } else if(currentRenderMode === 'toon'){
+    mat = new THREE.MeshToonMaterial({
+      vertexColors: true,
+      side: THREE.DoubleSide
+    });
+    spatialObject = new THREE.Mesh(geometry, mat);
   } else {
-    const mat = new THREE.PointsMaterial({
-      size: 0.04,
+    mat = new THREE.PointsMaterial({
+      size: 0.045,
       sizeAttenuation: true,
       vertexColors: true,
       transparent: true,
       opacity: 0.95
     });
-    spatialObject = new THREE.Points(g, mat);
+    spatialObject = new THREE.Points(geometry, mat);
   }
   
   spatialObject.rotation.copy(oldRotation);
   scene.add(spatialObject);
-  document.getElementById('node-counter').innerText = (filteredPositions.length/3).toLocaleString();
+  document.getElementById('node-counter').innerText = vertexCount.toLocaleString();
 }
 
 function processEnvironmentData(data){
  try{
-  setProgress(10); appendChat('Parsing 4D stream into 3D environment...','system');
+  setProgress(10); appendChat('Synthesizing 4D neural stream into immersive 3D environment...','system');
   const seq = extract4DSequence(data);
   if(seq && seq.length > 0){
    raw4DSourceFrames = seq;
@@ -335,21 +368,21 @@ function processEnvironmentData(data){
 
    apply4DFrameAndRender(0);
    setProgress(100); 
-   document.getElementById('render-status').innerText = '3D Environment Active'; 
-   document.getElementById('bbox-info').innerText = `${seq.length} temporal frames`;
-   appendChat(`✓ 3D Environment built. Loaded ${seq.length} frames.`,'system'); 
-   if(seq.length <= 200) saveToVault(`CORE_3D_${Date.now()}`, {HyperStream4D: seq.map(s=>({v:s.vertices4D, c:s.colors}))}); 
+   document.getElementById('render-status').innerText = '3D Volumetric Environment Active'; 
+   document.getElementById('bbox-info').innerText = `${seq.length} temporal frames parsed`;
+   appendChat(`✓ 3D Environment constructed successfully from ${seq.length} frames.`,'system'); 
+   if(seq.length <= 250) saveToVault(`ENV_CORE_${Date.now()}`, {HyperStream4D: seq.map(s=>({v:s.vertices4D, c:s.colors}))}); 
    return;
   }
   appendChat('Unrecognized payload format.','error'); setProgress(0);
- }catch(e){appendChat('Matrix Parsing Error: '+e.message,'error'); setProgress(0); console.error(e)}
+ }catch(e){appendChat('Matrix Construction Error: '+e.message,'error'); setProgress(0); console.error(e)}
 }
 
 function applyRuntimePatch(){
   const code = document.getElementById('runtime-code-box').value;
   try {
     customUserTransformScript = new Function(code);
-    appendChat('✓ Upgraded environment code successfully applied!', 'system');
+    appendChat('✓ Custom 3D transformation script injected successfully!', 'system');
   } catch(e){
     appendChat('Script Compile Error: ' + e.message, 'error');
   }
@@ -364,7 +397,7 @@ function setupDragDrop(){
 
 function readFile(file){
   const r = new FileReader(); 
-  r.onload = ev => { try{ processEnvironmentData(JSON.parse(ev.target.result)); }catch(err){ appendChat('Invalid core payload '+err.message,'error'); }}; 
+  r.onload = ev => { try{ processEnvironmentData(JSON.parse(ev.target.result)); }catch(err){ appendChat('Invalid payload syntax '+err.message,'error'); }}; 
   r.readAsText(file);
 }
 
@@ -409,13 +442,13 @@ function exportCurrentPNG(){
   if(!spatialObject){ appendChat('No 3D environment loaded','error'); return; } 
   renderer.render(scene, camera); 
   const url = document.getElementById('three-canvas').toDataURL('image/png'); 
-  const a = document.createElement('a'); a.href = url; a.download = `hyperstream_3d_snap_${Date.now()}.png`; a.click(); 
-  appendChat('High-res 3D snapshot exported', 'system');
+  const a = document.createElement('a'); a.href = url; a.download = `hyperstream_4k_frame_${Date.now()}.png`; a.click(); 
+  appendChat('High-resolution 4K frame exported', 'system');
 }
 
 function export3DTurntableGIF(){
-  if(!spatialObject){ appendChat('No 3D model active','error'); return; } 
-  appendChat('Rendering 3D turntable GIF...','system'); 
+  if(!spatialObject){ appendChat('No active 3D environment','error'); return; } 
+  appendChat('Rendering turntable GIF matrix...','system'); 
   const gif = new GIF({workers: 2, quality: 10, width: 640, height: 480, workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'}); 
   const origPos = camera.position.clone(); 
   let f = 0; const total = 36; const rad = camera.position.distanceTo(controls.target); 
@@ -435,7 +468,7 @@ function export3DTurntableGIF(){
       gif.on('finished', blob => {
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob); 
         a.download = `hyperstream_turntable_${Date.now()}.gif`; a.click(); 
-        appendChat('3D turntable GIF complete', 'system');
+        appendChat('Turntable GIF rendering complete', 'system');
       }); 
       gif.render();
     }
@@ -445,10 +478,10 @@ function export3DTurntableGIF(){
 
 function export3DStreamWebM(){
   if(!renderer || !spatialObject){
-    appendChat('No active 3D video stream to record.', 'error');
+    appendChat('No active 3D environment stream to record.', 'error');
     return;
   }
-  appendChat('Recording 3D video stream (.webm)...', 'system');
+  appendChat('Recording 3D video sequence (.webm)...', 'system');
   recordedChunks = [];
   const canvas = document.getElementById('three-canvas');
   const stream = canvas.captureStream(30); 
@@ -473,7 +506,7 @@ function export3DStreamWebM(){
     a.download = `hyperstream_3d_video_${Date.now()}.webm`;
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 2000);
-    appendChat('✓ 3D Video exported successfully!', 'system');
+    appendChat('✓ 3D Video sequence exported successfully!', 'system');
   };
   mediaRecorder.start();
   let frameCounter = 0;

@@ -2,34 +2,33 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HyperStream XD • Engine v5.8 — Holographic World</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>HyperStream XD • v5.9</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#020617;color:#f8fafc;font-family:system-ui,sans-serif;height:100vh;display:flex;overflow:hidden}
-#sidebar{width:390px;background:#030712;border-right:1px solid #1e293b;padding:12px;display:flex;flex-direction:column;gap:8px;overflow-y:auto;z-index:10}
-.card{background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:7px}
-.title{font-size:9px;font-weight:800;text-transform:uppercase;color:#94a3b8;letter-spacing:.5px}
+#sidebar{width:380px;background:#030712;border-right:1px solid #1e293b;padding:12px;display:flex;flex-direction:column;gap:8px;overflow-y:auto;z-index:10}
+.card{background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:6px}
+.title{font-size:9px;font-weight:800;text-transform:uppercase;color:#94a3b8;letter-spacing:.4px}
 .row{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#cbd5e1}
-button{border:none;border-radius:6px;padding:8px 10px;font-size:11px;font-weight:800;cursor:pointer;color:#fff;transition:opacity .15s}
+button{border:none;border-radius:6px;padding:8px;font-size:11px;font-weight:800;cursor:pointer;color:#fff}
 button:disabled{opacity:.4;cursor:not-allowed}
 .btn-p{background:linear-gradient(135deg,#8b5cf6,#ec4899)}
 .btn-g{background:linear-gradient(135deg,#10b981,#059669)}
-.btn-d{background:#ef4444}
-.btn-d.on{background:#f97316}
+.btn-d{background:#ef4444}.btn-d.on{background:#f97316}
 .btn-b{background:#3b82f6}
 .btn-o{background:linear-gradient(135deg,#f59e0b,#d97706)}
-input[type=range]{accent-color:#ec4899;width:110px}
+input[type=range]{accent-color:#ec4899;width:105px}
 input[type=file]{font-size:10px;color:#94a3b8}
 #viewer{flex:1;position:relative}
 canvas{display:block;width:100%;height:100%}
-.stats{position:absolute;top:10px;right:10px;background:rgba(2,6,23,0.85);padding:6px 12px;border-radius:6px;font-size:11px;color:#94a3b8;z-index:5;display:flex;gap:14px}
+.stats{position:absolute;top:10px;right:10px;background:rgba(2,6,23,.85);padding:6px 12px;border-radius:6px;font-size:11px;color:#94a3b8;z-index:5;display:flex;gap:12px}
 .rec-indicator{display:none;align-items:center;gap:6px;color:#f87171;font-weight:700}
 .rec-indicator.on{display:flex}
 .rec-dot{width:8px;height:8px;background:#ef4444;border-radius:50%;animation:pulse 1s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 video{display:none}
-.small{font-size:10px;color:#64748b;line-height:1.35}
+.small{font-size:10px;color:#64748b;line-height:1.3}
 .status-msg{font-size:10px;color:#38bdf8;min-height:14px}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -37,8 +36,8 @@ video{display:none}
 </head>
 <body>
 <div id="sidebar">
-  <div style="font-size:13px;font-weight:900;color:#38bdf8;margin-bottom:4px">HYPERSTREAM XD • v5.8</div>
-  <div style="font-size:10px;color:#64748b;margin-bottom:6px">Holographic World Builder</div>
+  <div style="font-size:13px;font-weight:900;color:#38bdf8">HYPERSTREAM XD • v5.9</div>
+  <div style="font-size:10px;color:#64748b;margin-bottom:4px">Holographic World Builder</div>
 
   <div class="card">
     <div class="title">Live Matrix Control</div>
@@ -55,9 +54,8 @@ video{display:none}
     <div class="row"><span>3D Frames</span><b id="frameCount" style="color:#a78bfa">0</b></div>
     <button class="btn-g" id="recBtn" onclick="toggleRecord()">● START RECORDING</button>
     <button class="btn-b" id="playBtn" onclick="togglePlayback()" disabled>▶ PLAY 3D SEQUENCE</button>
-    <button class="btn-p" onclick="downloadVideo()" id="dlVideoBtn" disabled>Download Video (.webm)</button>
-    <button class="btn-p" onclick="exportSequence()" id="dlSeqBtn" disabled>Export 3D Sequence (JSON)</button>
-    <div class="small">Records the visual hologram + the 3D point-cloud sequence.</div>
+    <button class="btn-p" id="dlVideoBtn" onclick="downloadVideo()" disabled>Download Video (.webm)</button>
+    <button class="btn-p" id="dlSeqBtn" onclick="exportSequence()" disabled>Export 3D Sequence (JSON)</button>
   </div>
 
   <div class="card">
@@ -66,21 +64,19 @@ video{display:none}
     <div class="status-msg" id="buildStatus"></div>
     <button class="btn-p" id="buildSeqBtn" onclick="buildFromSequence()" disabled>Build from Sequence</button>
     <button class="btn-o" id="buildVidBtn" onclick="buildFromVideo()" disabled>Build from Recorded Video</button>
-    <button class="btn-g" id="saveEnvBtn" onclick="saveEnvironment()" disabled>Save Environment (JSON)</button>
+    <button class="btn-g" id="saveEnvBtn" onclick="saveEnvironment()" disabled>Save Environment</button>
     <button class="btn-o" id="shareEnvBtn" onclick="recordEnvironmentVideo()" disabled>Share Environment Video</button>
     <button class="btn-d" id="clearEnvBtn" onclick="clearEnvironment()" disabled>Clear Environment</button>
-    <div class="small">Creates a denser, more volumetric holographic world you can walk around with the mouse.</div>
   </div>
 
   <div class="card">
     <div class="title">Upload</div>
-    <div class="small">Load previous work</div>
     <input type="file" id="uploadEnv" accept=".json" onchange="uploadEnvironment(event)">
-    <div class="small" style="margin-top:4px">Environment JSON</div>
+    <div class="small">Environment JSON</div>
     <input type="file" id="uploadSeq" accept=".json" onchange="uploadSequence(event)">
-    <div class="small" style="margin-top:4px">3D Sequence JSON</div>
+    <div class="small">3D Sequence JSON</div>
     <input type="file" id="uploadVid" accept="video/*,.webm,.mp4" onchange="uploadVideo(event)">
-    <div class="small" style="margin-top:4px">Video file</div>
+    <div class="small">Video file</div>
   </div>
 </div>
 
@@ -94,665 +90,398 @@ video{display:none}
 </div>
 
 <script>
-const $ = id => document.getElementById(id);
+const $=id=>document.getElementById(id);
+let scene,cam,ren,ctrl,video,c2d,ctx,stream=null,ready=false,scanning=false;
+let stepSize=2,depthMul=95,fc=0,ft=0;
+let recording=false,mediaRecorder=null,recordedChunks=[],recordedVideoBlob=null,sequenceFrames=[];
+let recStartTime=0,recTimerInterval=null,lastCaptureTime=0;
+const CAPTURE_INTERVAL=75;
+let playingBack=false,playbackIndex=0,playbackLastTime=0;
+const PLAYBACK_FPS=12;
+let pointsMesh,posAttr,colAttr;
+const MAX_POINTS=85000;
+let envMesh=null,envGlow=null,envPos=null,envCol=null,roomGroup=null;
+let envRecording=false,envRecorder=null,envChunks=[];
 
-let scene, cam, ren, ctrl, video, c2d, ctx;
-let stream = null, ready = false;
-let scanning = false;
-let stepSize = 2, depthMul = 95;
-let fc = 0, ft = 0;
+window.addEventListener('DOMContentLoaded',()=>{init3();initCam();});
 
-let recording = false;
-let mediaRecorder = null;
-let recordedChunks = [];
-let recordedVideoBlob = null;
-let sequenceFrames = [];
-let recStartTime = 0;
-let recTimerInterval = null;
-let lastCaptureTime = 0;
-const CAPTURE_INTERVAL = 75;
-let playingBack = false;
-let playbackIndex = 0;
-let playbackLastTime = 0;
-const PLAYBACK_FPS = 12;
-
-let pointsMesh = null;
-let posAttr = null;
-let colAttr = null;
-const MAX_POINTS = 90000;
-
-let envMesh = null;
-let envGlow = null;          // second softer layer for holographic glow
-let envPos = null;
-let envCol = null;
-let roomGroup = null;
-
-let envRecording = false;
-let envRecorder = null;
-let envChunks = [];
-
-window.addEventListener('DOMContentLoaded', () => {
-  init3();
-  initCam();
-});
-
-function init3() {
-  const box = $('viewer');
-  scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x020617, 0.016);
-
-  cam = new THREE.PerspectiveCamera(50, box.clientWidth / box.clientHeight, 0.05, 2000);
-  cam.position.set(0, 1.35, 4.8);
-
-  ren = new THREE.WebGLRenderer({
-    canvas: $('c3'),
-    antialias: true,
-    powerPreference: 'high-performance',
-    preserveDrawingBuffer: true
-  });
-  ren.setSize(box.clientWidth, box.clientHeight);
-  ren.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+function init3(){
+  const box=$('viewer');
+  scene=new THREE.Scene();
+  scene.fog=new THREE.FogExp2(0x020617,0.015);
+  cam=new THREE.PerspectiveCamera(50,box.clientWidth/box.clientHeight,0.05,2000);
+  cam.position.set(0,1.4,5.0);
+  ren=new THREE.WebGLRenderer({canvas:$('c3'),antialias:true,powerPreference:'high-performance',preserveDrawingBuffer:true});
+  ren.setSize(box.clientWidth,box.clientHeight);
+  ren.setPixelRatio(Math.min(devicePixelRatio||1,2));
   ren.setClearColor(0x020617);
+  ctrl=new THREE.OrbitControls(cam,ren.domElement);
+  ctrl.enableDamping=true;ctrl.autoRotate=true;ctrl.autoRotateSpeed=0.5;
+  ctrl.target.set(0,0.35,0);ctrl.minDistance=1.8;ctrl.maxDistance=12;
+  scene.add(new THREE.AmbientLight(0xffffff,0.8));
+  const key=new THREE.DirectionalLight(0xa5f3fc,0.4);key.position.set(3,6,4);scene.add(key);
 
-  ctrl = new THREE.OrbitControls(cam, ren.domElement);
-  ctrl.enableDamping = true;
-  ctrl.autoRotate = true;
-  ctrl.autoRotateSpeed = 0.5;
-  ctrl.target.set(0, 0.35, 0);
-  ctrl.minDistance = 1.8;
-  ctrl.maxDistance = 12;
-
-  scene.add(new THREE.AmbientLight(0xffffff, 0.85));
-  const key = new THREE.DirectionalLight(0xa5f3fc, 0.45);
-  key.position.set(3, 6, 4);
-  scene.add(key);
-
-  // Live scanning points
-  const geo = new THREE.BufferGeometry();
-  const positions = new Float32Array(MAX_POINTS * 3);
-  const colors = new Float32Array(MAX_POINTS * 3);
-  posAttr = new THREE.BufferAttribute(positions, 3);
-  colAttr = new THREE.BufferAttribute(colors, 3);
-  geo.setAttribute('position', posAttr);
-  geo.setAttribute('color', colAttr);
-  geo.setDrawRange(0, 0);
-
-  pointsMesh = new THREE.Points(geo, new THREE.PointsMaterial({
-    size: 0.017,
-    vertexColors: true,
-    transparent: true,
-    opacity: 0.93,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-    sizeAttenuation: true
+  const geo=new THREE.BufferGeometry();
+  posAttr=new THREE.BufferAttribute(new Float32Array(MAX_POINTS*3),3);
+  colAttr=new THREE.BufferAttribute(new Float32Array(MAX_POINTS*3),3);
+  geo.setAttribute('position',posAttr);geo.setAttribute('color',colAttr);geo.setDrawRange(0,0);
+  pointsMesh=new THREE.Points(geo,new THREE.PointsMaterial({
+    size:0.016,vertexColors:true,transparent:true,opacity:0.9,
+    blending:THREE.AdditiveBlending,depthWrite:false,sizeAttenuation:true
   }));
   scene.add(pointsMesh);
-
-  createHolographicRoom();
-
-  window.addEventListener('resize', () => {
-    cam.aspect = box.clientWidth / box.clientHeight;
-    cam.updateProjectionMatrix();
-    ren.setSize(box.clientWidth, box.clientHeight);
+  createRoom();
+  window.addEventListener('resize',()=>{
+    cam.aspect=box.clientWidth/box.clientHeight;cam.updateProjectionMatrix();
+    ren.setSize(box.clientWidth,box.clientHeight);
   });
   ren.setAnimationLoop(loop);
 }
 
-function createHolographicRoom() {
-  roomGroup = new THREE.Group();
-
-  // Floor grid
-  const grid = new THREE.GridHelper(9, 28, 0x1e40af, 0x0f172a);
-  grid.position.y = -1.15;
-  grid.material.opacity = 0.4;
-  grid.material.transparent = true;
+function createRoom(){
+  roomGroup=new THREE.Group();
+  const grid=new THREE.GridHelper(9,28,0x1e40af,0x0f172a);
+  grid.position.y=-1.15;grid.material.opacity=0.38;grid.material.transparent=true;
   roomGroup.add(grid);
-
-  // Soft floor
-  const floor = new THREE.Mesh(
-    new THREE.PlaneGeometry(9, 9),
-    new THREE.MeshBasicMaterial({ color: 0x07101f, transparent: true, opacity: 0.4, side: THREE.DoubleSide })
-  );
-  floor.rotation.x = -Math.PI / 2;
-  floor.position.y = -1.16;
-  roomGroup.add(floor);
-
-  // Holographic bounding frame
-  const edges = new THREE.EdgesGeometry(new THREE.BoxGeometry(8.2, 4.4, 8.2));
-  const frame = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({
-    color: 0x38bdf8, transparent: true, opacity: 0.16
-  }));
-  frame.position.y = 0.95;
-  roomGroup.add(frame);
-
-  // Corner energy pillars
-  const pillarMat = new THREE.MeshBasicMaterial({ color: 0x22d3ee, transparent: true, opacity: 0.06 });
-  const pillarGeo = new THREE.CylinderGeometry(0.025, 0.025, 4.2, 6);
-  [[-3.7,0.95,-3.7],[3.7,0.95,-3.7],[-3.7,0.95,3.7],[3.7,0.95,3.7]].forEach(p => {
-    const m = new THREE.Mesh(pillarGeo, pillarMat);
-    m.position.set(...p);
-    roomGroup.add(m);
+  const floor=new THREE.Mesh(new THREE.PlaneGeometry(9,9),new THREE.MeshBasicMaterial({color:0x07101f,transparent:true,opacity:0.38,side:THREE.DoubleSide}));
+  floor.rotation.x=-Math.PI/2;floor.position.y=-1.16;roomGroup.add(floor);
+  const edges=new THREE.EdgesGeometry(new THREE.BoxGeometry(8.2,4.4,8.2));
+  const frame=new THREE.LineSegments(edges,new THREE.LineBasicMaterial({color:0x38bdf8,transparent:true,opacity:0.15}));
+  frame.position.y=0.95;roomGroup.add(frame);
+  const pillarMat=new THREE.MeshBasicMaterial({color:0x22d3ee,transparent:true,opacity:0.05});
+  const pillarGeo=new THREE.CylinderGeometry(0.025,0.025,4.2,6);
+  [[-3.7,0.95,-3.7],[3.7,0.95,-3.7],[-3.7,0.95,3.7],[3.7,0.95,3.7]].forEach(p=>{
+    const m=new THREE.Mesh(pillarGeo,pillarMat);m.position.set(...p);roomGroup.add(m);
   });
-
   scene.add(roomGroup);
 }
 
-function initCam() {
-  video = $('vid');
-  c2d = document.createElement('canvas');
-  ctx = c2d.getContext('2d', { willReadFrequently: true });
-
-  navigator.mediaDevices?.getUserMedia({
-    video: { width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 30 } },
-    audio: false
-  }).then(s => {
-    stream = s;
-    video.srcObject = s;
-    return video.play();
-  }).then(() => { ready = true; })
-  .catch(() => {
-    $('scanBtn').textContent = 'CAMERA BLOCKED';
-    $('scanBtn').disabled = true;
-  });
+function initCam(){
+  video=$('vid');c2d=document.createElement('canvas');ctx=c2d.getContext('2d',{willReadFrequently:true});
+  navigator.mediaDevices?.getUserMedia({video:{width:{ideal:640},height:{ideal:480},frameRate:{ideal:30}},audio:false})
+  .then(s=>{stream=s;video.srcObject=s;return video.play();}).then(()=>ready=true)
+  .catch(()=>{$('scanBtn').textContent='CAMERA BLOCKED';$('scanBtn').disabled=true;});
 }
 
-function loop(now) {
-  if (scanning) ctrl.autoRotate = false;
+function loop(now){
+  if(scanning)ctrl.autoRotate=false;
   ctrl.update();
-
-  fc++;
-  if (now - ft > 1000) {
-    $('fpsD').textContent = Math.round(fc * 1000 / (now - ft));
-    fc = 0; ft = now;
-  }
-
-  if (playingBack) playbackStep(now);
-  else if (scanning && ready && video.readyState >= 2) sample(now);
-
-  ren.render(scene, cam);
+  fc++;if(now-ft>1000){$('fpsD').textContent=Math.round(fc*1000/(now-ft));fc=0;ft=now;}
+  if(playingBack)playbackStep(now);
+  else if(scanning&&ready&&video.readyState>=2)sample(now);
+  ren.render(scene,cam);
 }
 
-function sample(now) {
-  const w = video.videoWidth || 640, h = video.videoHeight || 480;
-  if (c2d.width !== w || c2d.height !== h) { c2d.width = w; c2d.height = h; }
-  try { ctx.drawImage(video, 0, 0, w, h); } catch { return; }
-  let pix; try { pix = ctx.getImageData(0, 0, w, h).data; } catch { return; }
-
-  const step = Math.max(1, stepSize | 0);
-  let count = 0;
-
-  for (let y = 0; y < h && count < MAX_POINTS; y += step) {
-    for (let x = 0; x < w && count < MAX_POINTS; x += step) {
-      const i = (y * w + x) * 4;
-      const r = pix[i] / 255, g = pix[i+1] / 255, b = pix[i+2] / 255;
-      const lum = 0.299*r + 0.587*g + 0.114*b;
-      if (lum < 0.027) continue;
-
-      // Improved depth response – more natural separation
-      const depth = Math.pow(1.0 - lum, 1.4);
-      const nx = ((w - x) / w) * 2 - 1;
-      const ny = -((y / h) * 2 - 1);
-      const nz = (depth - 0.42) * (depthMul * 0.044);
-
-      const idx = count * 3;
-      posAttr.array[idx]     = nx * 1.7;
-      posAttr.array[idx + 1] = ny * 1.5 + 0.25;
-      posAttr.array[idx + 2] = nz;
-      colAttr.array[idx]     = r;
-      colAttr.array[idx + 1] = g;
-      colAttr.array[idx + 2] = b;
+function sample(now){
+  const w=video.videoWidth||640,h=video.videoHeight||480;
+  if(c2d.width!==w||c2d.height!==h){c2d.width=w;c2d.height=h;}
+  try{ctx.drawImage(video,0,0,w,h);}catch{return;}
+  let pix;try{pix=ctx.getImageData(0,0,w,h).data;}catch{return;}
+  const step=Math.max(1,stepSize|0);let count=0;
+  for(let y=0;y<h&&count<MAX_POINTS;y+=step){
+    for(let x=0;x<w&&count<MAX_POINTS;x+=step){
+      const i=(y*w+x)*4;
+      const r=pix[i]/255,g=pix[i+1]/255,b=pix[i+2]/255;
+      const lum=0.299*r+0.587*g+0.114*b;
+      if(lum<0.035)continue; // higher threshold helps prevent white-out
+      const depth=Math.pow(1.0-lum,1.45);
+      const nx=((w-x)/w)*2-1,ny=-((y/h)*2-1);
+      const nz=(depth-0.4)*(depthMul*0.043);
+      const idx=count*3;
+      posAttr.array[idx]=nx*1.7;posAttr.array[idx+1]=ny*1.5+0.25;posAttr.array[idx+2]=nz;
+      colAttr.array[idx]=r;colAttr.array[idx+1]=g;colAttr.array[idx+2]=b;
       count++;
     }
   }
-
-  posAttr.needsUpdate = true;
-  colAttr.needsUpdate = true;
-  pointsMesh.geometry.setDrawRange(0, count);
-  $('nLive').textContent = count.toLocaleString();
-
-  if (recording && (now - lastCaptureTime >= CAPTURE_INTERVAL)) {
-    lastCaptureTime = now;
+  posAttr.needsUpdate=true;colAttr.needsUpdate=true;
+  pointsMesh.geometry.setDrawRange(0,count);
+  $('nLive').textContent=count.toLocaleString();
+  if(recording&&(now-lastCaptureTime>=CAPTURE_INTERVAL)){
+    lastCaptureTime=now;
     sequenceFrames.push({
-      t: now - recStartTime,
-      n: count,
-      pos: new Float32Array(posAttr.array.buffer.slice(0, count * 3 * 4)),
-      col: new Float32Array(colAttr.array.buffer.slice(0, count * 3 * 4))
+      t:now-recStartTime,n:count,
+      pos:new Float32Array(posAttr.array.buffer.slice(0,count*3*4)),
+      col:new Float32Array(colAttr.array.buffer.slice(0,count*3*4))
     });
-    $('frameCount').textContent = sequenceFrames.length;
+    $('frameCount').textContent=sequenceFrames.length;
   }
 }
 
-function toggleScan() {
-  scanning = !scanning;
-  const b = $('scanBtn');
-  b.textContent = scanning ? 'STOP LIVE SCAN' : 'ACTIVATE LIVE SCAN';
-  b.classList.toggle('on', scanning);
-  ctrl.autoRotate = false;
-
-  if (!scanning && !playingBack) {
-    pointsMesh.geometry.setDrawRange(0, 0);
-    $('nLive').textContent = '0';
-    ctrl.autoRotate = true;
+function toggleScan(){
+  scanning=!scanning;
+  const b=$('scanBtn');
+  b.textContent=scanning?'STOP LIVE SCAN':'ACTIVATE LIVE SCAN';
+  b.classList.toggle('on',scanning);
+  ctrl.autoRotate=false;
+  if(!scanning&&!playingBack){
+    pointsMesh.geometry.setDrawRange(0,0);$('nLive').textContent='0';
+    ctrl.autoRotate=true;
   }
 }
 
-function toggleRecord() { recording ? stopRecording() : startRecording(); }
-
-function startRecording() {
-  if (!scanning) { alert('Activate Live Scan first.'); return; }
-  recordedChunks = [];
-  sequenceFrames = [];
-  recordedVideoBlob = null;
-  lastCaptureTime = 0;
-  recStartTime = performance.now();
-
-  const canvasStream = $('c3').captureStream(30);
-  const opts = { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 6500000 };
-  if (!MediaRecorder.isTypeSupported(opts.mimeType)) opts.mimeType = 'video/webm';
-  mediaRecorder = new MediaRecorder(canvasStream, opts);
-
-  mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
-  mediaRecorder.onstop = () => {
-    recordedVideoBlob = new Blob(recordedChunks, { type: 'video/webm' });
-    $('dlVideoBtn').disabled = recordedChunks.length === 0;
-    $('dlSeqBtn').disabled = sequenceFrames.length === 0;
-    $('playBtn').disabled = sequenceFrames.length === 0;
-    $('buildSeqBtn').disabled = sequenceFrames.length === 0;
-    $('buildVidBtn').disabled = !recordedVideoBlob;
+function toggleRecord(){recording?stopRecording():startRecording();}
+function startRecording(){
+  if(!scanning){alert('Activate Live Scan first.');return;}
+  recordedChunks=[];sequenceFrames=[];recordedVideoBlob=null;lastCaptureTime=0;recStartTime=performance.now();
+  const opts={mimeType:'video/webm;codecs=vp9',videoBitsPerSecond:6500000};
+  if(!MediaRecorder.isTypeSupported(opts.mimeType))opts.mimeType='video/webm';
+  mediaRecorder=new MediaRecorder($('c3').captureStream(30),opts);
+  mediaRecorder.ondataavailable=e=>{if(e.data.size>0)recordedChunks.push(e.data);};
+  mediaRecorder.onstop=()=>{
+    recordedVideoBlob=new Blob(recordedChunks,{type:'video/webm'});
+    $('dlVideoBtn').disabled=!recordedChunks.length;
+    $('dlSeqBtn').disabled=!sequenceFrames.length;
+    $('playBtn').disabled=!sequenceFrames.length;
+    $('buildSeqBtn').disabled=!sequenceFrames.length;
+    $('buildVidBtn').disabled=!recordedVideoBlob;
   };
-
-  mediaRecorder.start(100);
-  recording = true;
-  $('recBtn').textContent = '■ STOP RECORDING';
-  $('recBtn').classList.remove('btn-g'); $('recBtn').classList.add('btn-d');
-  $('recStatus').textContent = 'Recording…'; $('recStatus').style.color = '#f87171';
-  $('recInd').classList.add('on');
-  $('frameCount').textContent = '0';
-  recTimerInterval = setInterval(updateRecTimer, 200);
+  mediaRecorder.start(100);recording=true;
+  $('recBtn').textContent='■ STOP RECORDING';$('recBtn').classList.remove('btn-g');$('recBtn').classList.add('btn-d');
+  $('recStatus').textContent='Recording…';$('recStatus').style.color='#f87171';$('recInd').classList.add('on');
+  $('frameCount').textContent='0';recTimerInterval=setInterval(updateRecTimer,200);
 }
-
-function stopRecording() {
-  if (!recording) return;
-  recording = false;
-  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+function stopRecording(){
+  if(!recording)return;recording=false;
+  if(mediaRecorder&&mediaRecorder.state!=='inactive')mediaRecorder.stop();
   clearInterval(recTimerInterval);
-  $('recBtn').textContent = '● START RECORDING';
-  $('recBtn').classList.remove('btn-d'); $('recBtn').classList.add('btn-g');
-  $('recStatus').textContent = 'Stopped'; $('recStatus').style.color = '#94a3b8';
-  $('recInd').classList.remove('on');
+  $('recBtn').textContent='● START RECORDING';$('recBtn').classList.remove('btn-d');$('recBtn').classList.add('btn-g');
+  $('recStatus').textContent='Stopped';$('recStatus').style.color='#94a3b8';$('recInd').classList.remove('on');
+}
+function updateRecTimer(){
+  if(!recording)return;
+  const e=(performance.now()-recStartTime)/1000;
+  $('recTime').textContent=Math.floor(e/60).toString().padStart(2,'0')+':'+Math.floor(e%60).toString().padStart(2,'0');
+}
+function downloadVideo(){
+  if(!recordedChunks.length)return;
+  const url=URL.createObjectURL(new Blob(recordedChunks,{type:'video/webm'}));
+  const a=document.createElement('a');a.href=url;a.download=`hyperstream_${Date.now()}.webm`;a.click();URL.revokeObjectURL(url);
+}
+function exportSequence(){
+  if(!sequenceFrames.length)return;
+  const payload={version:'HyperStreamXD-5.9',frames:sequenceFrames.map(f=>({t:Math.round(f.t),n:f.n,pos:Array.from(f.pos),col:Array.from(f.col)}))};
+  const url=URL.createObjectURL(new Blob([JSON.stringify(payload)],{type:'application/json'}));
+  const a=document.createElement('a');a.href=url;a.download=`sequence_${Date.now()}.json`;a.click();URL.revokeObjectURL(url);
+}
+function togglePlayback(){playingBack?stopPlayback():startPlayback();}
+function startPlayback(){
+  if(!sequenceFrames.length)return;
+  if(scanning)toggleScan();
+  playingBack=true;playbackIndex=0;playbackLastTime=performance.now();
+  $('playBtn').textContent='■ STOP PLAYBACK';$('recStatus').textContent='Playing Sequence';$('recStatus').style.color='#a78bfa';
+  ctrl.autoRotate=true;
+}
+function stopPlayback(){
+  playingBack=false;$('playBtn').textContent='▶ PLAY 3D SEQUENCE';
+  $('recStatus').textContent='Idle';$('recStatus').style.color='#94a3b8';
+  pointsMesh.geometry.setDrawRange(0,0);$('nLive').textContent='0';ctrl.autoRotate=!scanning;
+}
+function playbackStep(now){
+  if(!sequenceFrames.length)return;
+  if(now-playbackLastTime<1000/PLAYBACK_FPS)return;
+  playbackLastTime=now;
+  const f=sequenceFrames[playbackIndex];
+  posAttr.array.set(f.pos);colAttr.array.set(f.col);
+  posAttr.needsUpdate=true;colAttr.needsUpdate=true;
+  pointsMesh.geometry.setDrawRange(0,f.n);$('nLive').textContent=f.n.toLocaleString();
+  playbackIndex=(playbackIndex+1)%sequenceFrames.length;
 }
 
-function updateRecTimer() {
-  if (!recording) return;
-  const e = (performance.now() - recStartTime) / 1000;
-  $('recTime').textContent = Math.floor(e/60).toString().padStart(2,'0') + ':' + Math.floor(e%60).toString().padStart(2,'0');
-}
+/* ---- Environment (fixed white-out) ---- */
+function finalizeEnvironment(mergedPos,mergedCol){
+  if(mergedPos.length<400){$('buildStatus').textContent='Not enough points – record longer.';return;}
+  if(envMesh){scene.remove(envMesh);envMesh.geometry.dispose();envMesh.material.dispose();}
+  if(envGlow){scene.remove(envGlow);envGlow.geometry.dispose();envGlow.material.dispose();}
 
-function downloadVideo() {
-  if (!recordedChunks.length) return;
-  const blob = new Blob(recordedChunks, { type: 'video/webm' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = `hyperstream_${Date.now()}.webm`; a.click();
-  URL.revokeObjectURL(url);
-}
-
-function exportSequence() {
-  if (!sequenceFrames.length) return;
-  const payload = {
-    version: 'HyperStreamXD-5.8',
-    frames: sequenceFrames.map(f => ({
-      t: Math.round(f.t), n: f.n,
-      pos: Array.from(f.pos), col: Array.from(f.col)
-    }))
-  };
-  const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = `sequence_${Date.now()}.json`; a.click();
-  URL.revokeObjectURL(url);
-}
-
-function togglePlayback() { playingBack ? stopPlayback() : startPlayback(); }
-
-function startPlayback() {
-  if (!sequenceFrames.length) return;
-  if (scanning) toggleScan();
-  playingBack = true; playbackIndex = 0; playbackLastTime = performance.now();
-  $('playBtn').textContent = '■ STOP PLAYBACK';
-  $('recStatus').textContent = 'Playing Sequence'; $('recStatus').style.color = '#a78bfa';
-  ctrl.autoRotate = true;
-}
-
-function stopPlayback() {
-  playingBack = false;
-  $('playBtn').textContent = '▶ PLAY 3D SEQUENCE';
-  $('recStatus').textContent = 'Idle'; $('recStatus').style.color = '#94a3b8';
-  pointsMesh.geometry.setDrawRange(0, 0); $('nLive').textContent = '0';
-  ctrl.autoRotate = !scanning;
-}
-
-function playbackStep(now) {
-  if (!sequenceFrames.length) return;
-  if (now - playbackLastTime < 1000 / PLAYBACK_FPS) return;
-  playbackLastTime = now;
-  const f = sequenceFrames[playbackIndex];
-  posAttr.array.set(f.pos); colAttr.array.set(f.col);
-  posAttr.needsUpdate = true; colAttr.needsUpdate = true;
-  pointsMesh.geometry.setDrawRange(0, f.n);
-  $('nLive').textContent = f.n.toLocaleString();
-  playbackIndex = (playbackIndex + 1) % sequenceFrames.length;
-}
-
-/* ========== Improved Holographic World ========== */
-function finalizeEnvironment(mergedPos, mergedCol) {
-  if (mergedPos.length < 400) {
-    $('buildStatus').textContent = 'Not enough points – record a bit longer.';
-    return;
+  // Preserve luminance better – prevent white blowout
+  for(let i=0;i<mergedCol.length;i+=3){
+    let r=mergedCol[i],g=mergedCol[i+1],b=mergedCol[i+2];
+    const lum=0.299*r+0.587*g+0.114*b;
+    // soft holographic tint without washing out
+    r=r*0.82+0.08;g=g*0.88+0.14;b=Math.min(1,b*0.78+0.28);
+    // gentle contrast
+    const f=1.15;
+    r=Math.min(1,((r-0.5)*f)+0.5);
+    g=Math.min(1,((g-0.5)*f)+0.5);
+    b=Math.min(1,((b-0.5)*f)+0.5);
+    mergedCol[i]=r;mergedCol[i+1]=g;mergedCol[i+2]=b;
   }
 
-  // Remove previous environment but keep the room
-  if (envMesh) {
-    scene.remove(envMesh);
-    envMesh.geometry.dispose();
-    envMesh.material.dispose();
-  }
-  if (envGlow) {
-    scene.remove(envGlow);
-    envGlow.geometry.dispose();
-    envGlow.material.dispose();
-  }
+  envPos=new Float32Array(mergedPos);envCol=new Float32Array(mergedCol);
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(envPos,3));
+  geo.setAttribute('color',new THREE.BufferAttribute(envCol,3));
 
-  // Gentle holographic color grade (keeps original colors, adds energy)
-  for (let i = 0; i < mergedCol.length; i += 3) {
-    const r = mergedCol[i], g = mergedCol[i+1], b = mergedCol[i+2];
-    mergedCol[i]   = r * 0.78 + 0.12;
-    mergedCol[i+1] = g * 0.88 + 0.22;
-    mergedCol[i+2] = Math.min(1, b * 0.72 + 0.42);
-  }
-
-  envPos = new Float32Array(mergedPos);
-  envCol = new Float32Array(mergedCol);
-
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.BufferAttribute(envPos, 3));
-  geo.setAttribute('color', new THREE.BufferAttribute(envCol, 3));
-
-  // Main dense layer
-  envMesh = new THREE.Points(geo, new THREE.PointsMaterial({
-    size: 0.019,
-    vertexColors: true,
-    transparent: true,
-    opacity: 0.9,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-    sizeAttenuation: true
+  // Main layer – lower opacity to stop white-out
+  envMesh=new THREE.Points(geo,new THREE.PointsMaterial({
+    size:0.017,vertexColors:true,transparent:true,opacity:0.72,
+    blending:THREE.AdditiveBlending,depthWrite:false,sizeAttenuation:true
   }));
-  envMesh.position.y = 0.2;
-  scene.add(envMesh);
+  envMesh.position.y=0.2;scene.add(envMesh);
 
-  // Soft outer glow layer (makes it feel more like a real hologram)
-  const glowGeo = geo.clone();
-  envGlow = new THREE.Points(glowGeo, new THREE.PointsMaterial({
-    size: 0.045,
-    vertexColors: true,
-    transparent: true,
-    opacity: 0.22,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-    sizeAttenuation: true
+  // Soft glow – much weaker
+  envGlow=new THREE.Points(geo.clone(),new THREE.PointsMaterial({
+    size:0.038,vertexColors:true,transparent:true,opacity:0.12,
+    blending:THREE.AdditiveBlending,depthWrite:false,sizeAttenuation:true
   }));
-  envGlow.position.y = 0.2;
-  scene.add(envGlow);
+  envGlow.position.y=0.2;scene.add(envGlow);
 
-  $('envPoints').textContent = (envPos.length / 3).toLocaleString();
-  $('clearEnvBtn').disabled = false;
-  $('saveEnvBtn').disabled = false;
-  $('shareEnvBtn').disabled = false;
-  $('buildSeqBtn').disabled = sequenceFrames.length === 0;
-  $('buildVidBtn').disabled = !recordedVideoBlob;
-  $('buildStatus').textContent = 'Holographic world ready';
-
-  cam.position.set(0, 1.5, 5.4);
-  ctrl.target.set(0, 0.35, 0);
-  ctrl.autoRotate = true;
+  $('envPoints').textContent=(envPos.length/3).toLocaleString();
+  $('clearEnvBtn').disabled=false;$('saveEnvBtn').disabled=false;$('shareEnvBtn').disabled=false;
+  $('buildSeqBtn').disabled=!sequenceFrames.length;$('buildVidBtn').disabled=!recordedVideoBlob;
+  $('buildStatus').textContent='Holographic world ready';
+  cam.position.set(0,1.5,5.4);ctrl.target.set(0,0.35,0);ctrl.autoRotate=true;
 }
 
-function buildFromSequence() {
-  if (!sequenceFrames.length) return;
-  if (playingBack) stopPlayback();
-  $('buildStatus').textContent = 'Building denser holographic world…';
-
-  const TARGET = 140000; // more nodes
-  const maxFrames = Math.min(sequenceFrames.length, 55);
-  const frameStep = Math.max(1, Math.floor(sequenceFrames.length / maxFrames));
-  const mergedPos = [], mergedCol = [];
-  const depthSpread = 2.9;
-
-  for (let fi = 0; fi < sequenceFrames.length; fi += frameStep) {
-    const f = sequenceFrames[fi];
-    const progress = fi / Math.max(1, sequenceFrames.length - 1);
-    const zOffset = (progress - 0.5) * depthSpread;
-    const keep = Math.min(1.0, (TARGET / sequenceFrames.length) / Math.max(1, f.n) * 1.15);
-
-    for (let p = 0; p < f.n; p++) {
-      if (Math.random() > keep) continue;
-      const idx = p * 3;
-      const j = 0.011;
-      mergedPos.push(
-        f.pos[idx]     + (Math.random() - 0.5) * j,
-        f.pos[idx + 1] + (Math.random() - 0.5) * j,
-        f.pos[idx + 2] + zOffset + (Math.random() - 0.5) * j
-      );
-      mergedCol.push(f.col[idx], f.col[idx + 1], f.col[idx + 2]);
-      if (mergedPos.length / 3 >= TARGET) break;
+function buildFromSequence(){
+  if(!sequenceFrames.length)return;
+  if(playingBack)stopPlayback();
+  $('buildStatus').textContent='Building holographic world…';
+  const TARGET=110000,maxFrames=Math.min(sequenceFrames.length,50);
+  const frameStep=Math.max(1,Math.floor(sequenceFrames.length/maxFrames));
+  const mergedPos=[],mergedCol=[],depthSpread=2.8;
+  for(let fi=0;fi<sequenceFrames.length;fi+=frameStep){
+    const f=sequenceFrames[fi];
+    const progress=fi/Math.max(1,sequenceFrames.length-1);
+    const zOffset=(progress-0.5)*depthSpread;
+    const keep=Math.min(1,(TARGET/sequenceFrames.length)/Math.max(1,f.n)*1.1);
+    for(let p=0;p<f.n;p++){
+      if(Math.random()>keep)continue;
+      const idx=p*3,j=0.01;
+      mergedPos.push(f.pos[idx]+(Math.random()-0.5)*j,f.pos[idx+1]+(Math.random()-0.5)*j,f.pos[idx+2]+zOffset+(Math.random()-0.5)*j);
+      mergedCol.push(f.col[idx],f.col[idx+1],f.col[idx+2]);
+      if(mergedPos.length/3>=TARGET)break;
     }
-    if (mergedPos.length / 3 >= TARGET) break;
+    if(mergedPos.length/3>=TARGET)break;
   }
-  finalizeEnvironment(mergedPos, mergedCol);
+  finalizeEnvironment(mergedPos,mergedCol);
 }
 
-function buildFromVideo() {
-  if (!recordedVideoBlob) {
-    alert('No recorded video available.');
-    return;
-  }
-  if (playingBack) stopPlayback();
-  $('buildStatus').textContent = 'Processing video into holographic world…';
-  $('buildVidBtn').disabled = true;
-
-  const tempVideo = document.createElement('video');
-  tempVideo.muted = true;
-  tempVideo.playsInline = true;
-  tempVideo.src = URL.createObjectURL(recordedVideoBlob);
-
-  const tempCanvas = document.createElement('canvas');
-  const tempCtx = tempCanvas.getContext('2d', { willReadFrequently: true });
-  const collected = [];
-
-  tempVideo.addEventListener('loadedmetadata', () => {
-    const duration = tempVideo.duration;
-    const frameInterval = 0.1;
-    let t = 0;
-
-    function processNext() {
-      if (t > duration) {
+function buildFromVideo(){
+  if(!recordedVideoBlob){alert('No recorded video available.');return;}
+  if(playingBack)stopPlayback();
+  $('buildStatus').textContent='Processing video…';$('buildVidBtn').disabled=true;
+  const tempVideo=document.createElement('video');tempVideo.muted=true;tempVideo.playsInline=true;
+  tempVideo.src=URL.createObjectURL(recordedVideoBlob);
+  const tempCanvas=document.createElement('canvas');
+  const tempCtx=tempCanvas.getContext('2d',{willReadFrequently:true});
+  const collected=[];
+  tempVideo.addEventListener('loadedmetadata',()=>{
+    const duration=tempVideo.duration,frameInterval=0.11;let t=0;
+    function processNext(){
+      if(t>duration){
         URL.revokeObjectURL(tempVideo.src);
-        const TARGET = 140000;
-        const mergedPos = [], mergedCol = [];
-        const depthSpread = 2.9;
-        const step = Math.max(1, Math.floor(collected.length / 48));
-
-        for (let i = 0; i < collected.length; i += step) {
-          const f = collected[i];
-          const progress = i / Math.max(1, collected.length - 1);
-          const zOffset = (progress - 0.5) * depthSpread;
-          const keep = Math.min(1.0, (TARGET / collected.length) / Math.max(1, f.n) * 1.15);
-          for (let p = 0; p < f.n; p++) {
-            if (Math.random() > keep) continue;
-            const idx = p * 3, j = 0.011;
-            mergedPos.push(
-              f.pos[idx] + (Math.random()-0.5)*j,
-              f.pos[idx+1] + (Math.random()-0.5)*j,
-              f.pos[idx+2] + zOffset + (Math.random()-0.5)*j
-            );
-            mergedCol.push(f.col[idx], f.col[idx+1], f.col[idx+2]);
-            if (mergedPos.length / 3 >= TARGET) break;
+        const TARGET=110000,mergedPos=[],mergedCol=[],depthSpread=2.8;
+        const step=Math.max(1,Math.floor(collected.length/45));
+        for(let i=0;i<collected.length;i+=step){
+          const f=collected[i],progress=i/Math.max(1,collected.length-1);
+          const zOffset=(progress-0.5)*depthSpread;
+          const keep=Math.min(1,(TARGET/collected.length)/Math.max(1,f.n)*1.1);
+          for(let p=0;p<f.n;p++){
+            if(Math.random()>keep)continue;
+            const idx=p*3,j=0.01;
+            mergedPos.push(f.pos[idx]+(Math.random()-0.5)*j,f.pos[idx+1]+(Math.random()-0.5)*j,f.pos[idx+2]+zOffset+(Math.random()-0.5)*j);
+            mergedCol.push(f.col[idx],f.col[idx+1],f.col[idx+2]);
+            if(mergedPos.length/3>=TARGET)break;
           }
-          if (mergedPos.length / 3 >= TARGET) break;
+          if(mergedPos.length/3>=TARGET)break;
         }
-        finalizeEnvironment(mergedPos, mergedCol);
-        return;
+        finalizeEnvironment(mergedPos,mergedCol);return;
       }
-      tempVideo.currentTime = t;
+      tempVideo.currentTime=t;
     }
-
-    tempVideo.addEventListener('seeked', () => {
-      const w = tempVideo.videoWidth || 640, h = tempVideo.videoHeight || 480;
-      tempCanvas.width = w; tempCanvas.height = h;
-      tempCtx.drawImage(tempVideo, 0, 0, w, h);
-      let pix;
-      try { pix = tempCtx.getImageData(0, 0, w, h).data; } catch { t += frameInterval; processNext(); return; }
-
-      const step = Math.max(2, stepSize | 0);
-      const pos = [], col = [];
-      let count = 0;
-      for (let y = 0; y < h && count < 28000; y += step) {
-        for (let x = 0; x < w && count < 28000; x += step) {
-          const i = (y * w + x) * 4;
-          const r = pix[i]/255, g = pix[i+1]/255, b = pix[i+2]/255;
-          const lum = 0.299*r + 0.587*g + 0.114*b;
-          if (lum < 0.028) continue;
-          const depth = Math.pow(1.0 - lum, 1.4);
-          const nx = ((w - x) / w) * 2 - 1;
-          const ny = -((y / h) * 2 - 1);
-          const nz = (depth - 0.42) * (depthMul * 0.044);
-          pos.push(nx * 1.7, ny * 1.5 + 0.25, nz);
-          col.push(r, g, b);
-          count++;
+    tempVideo.addEventListener('seeked',()=>{
+      const w=tempVideo.videoWidth||640,h=tempVideo.videoHeight||480;
+      tempCanvas.width=w;tempCanvas.height=h;tempCtx.drawImage(tempVideo,0,0,w,h);
+      let pix;try{pix=tempCtx.getImageData(0,0,w,h).data;}catch{t+=frameInterval;processNext();return;}
+      const step=Math.max(2,stepSize|0),pos=[],col=[];let count=0;
+      for(let y=0;y<h&&count<24000;y+=step){
+        for(let x=0;x<w&&count<24000;x+=step){
+          const i=(y*w+x)*4;
+          const r=pix[i]/255,g=pix[i+1]/255,b=pix[i+2]/255;
+          const lum=0.299*r+0.587*g+0.114*b;
+          if(lum<0.038)continue;
+          const depth=Math.pow(1.0-lum,1.45);
+          const nx=((w-x)/w)*2-1,ny=-((y/h)*2-1);
+          const nz=(depth-0.4)*(depthMul*0.043);
+          pos.push(nx*1.7,ny*1.5+0.25,nz);col.push(r,g,b);count++;
         }
       }
-      if (count > 50) collected.push({ n: count, pos: new Float32Array(pos), col: new Float32Array(col) });
-      $('buildStatus').textContent = `Building world… ${Math.min(100, Math.round(t / duration * 100))}%`;
-      t += frameInterval;
-      processNext();
+      if(count>40)collected.push({n:count,pos:new Float32Array(pos),col:new Float32Array(col)});
+      $('buildStatus').textContent=`Building… ${Math.min(100,Math.round(t/duration*100))}%`;
+      t+=frameInterval;processNext();
     });
-
     processNext();
   });
   tempVideo.load();
 }
 
-function saveEnvironment() {
-  if (!envPos) return;
-  const payload = {
-    version: 'HyperStreamXD-HolographicWorld-5.8',
-    pointCount: envPos.length / 3,
-    positions: Array.from(envPos),
-    colors: Array.from(envCol)
-  };
-  const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = `holographic_world_${Date.now()}.json`; a.click();
-  URL.revokeObjectURL(url);
+function saveEnvironment(){
+  if(!envPos)return;
+  const payload={version:'HyperStreamXD-5.9',pointCount:envPos.length/3,positions:Array.from(envPos),colors:Array.from(envCol)};
+  const url=URL.createObjectURL(new Blob([JSON.stringify(payload)],{type:'application/json'}));
+  const a=document.createElement('a');a.href=url;a.download=`holographic_world_${Date.now()}.json`;a.click();URL.revokeObjectURL(url);
 }
-
-function clearEnvironment() {
-  if (envMesh) {
-    scene.remove(envMesh);
-    envMesh.geometry.dispose();
-    envMesh.material.dispose();
-    envMesh = null;
-  }
-  if (envGlow) {
-    scene.remove(envGlow);
-    envGlow.geometry.dispose();
-    envGlow.material.dispose();
-    envGlow = null;
-  }
-  envPos = null; envCol = null;
-  $('envPoints').textContent = '0';
-  $('clearEnvBtn').disabled = true;
-  $('saveEnvBtn').disabled = true;
-  $('shareEnvBtn').disabled = true;
-  $('buildSeqBtn').disabled = sequenceFrames.length === 0;
-  $('buildVidBtn').disabled = !recordedVideoBlob;
-  $('buildStatus').textContent = '';
+function clearEnvironment(){
+  if(envMesh){scene.remove(envMesh);envMesh.geometry.dispose();envMesh.material.dispose();envMesh=null;}
+  if(envGlow){scene.remove(envGlow);envGlow.geometry.dispose();envGlow.material.dispose();envGlow=null;}
+  envPos=null;envCol=null;$('envPoints').textContent='0';
+  $('clearEnvBtn').disabled=true;$('saveEnvBtn').disabled=true;$('shareEnvBtn').disabled=true;
+  $('buildSeqBtn').disabled=!sequenceFrames.length;$('buildVidBtn').disabled=!recordedVideoBlob;
+  $('buildStatus').textContent='';
 }
-
-function recordEnvironmentVideo() {
-  if (!envMesh || envRecording) return;
-  if (playingBack) stopPlayback();
-  if (scanning) toggleScan();
-  pointsMesh.geometry.setDrawRange(0, 0);
-
-  envChunks = [];
-  const canvasStream = $('c3').captureStream(30);
-  const opts = { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 8500000 };
-  if (!MediaRecorder.isTypeSupported(opts.mimeType)) opts.mimeType = 'video/webm';
-  envRecorder = new MediaRecorder(canvasStream, opts);
-  envRecorder.ondataavailable = e => { if (e.data.size > 0) envChunks.push(e.data); };
-  envRecorder.onstop = () => {
-    envRecording = false;
-    $('shareEnvBtn').textContent = 'Share Environment Video';
-    $('shareEnvBtn').disabled = false;
-    $('recInd').classList.remove('on');
-    if (envChunks.length) {
-      const blob = new Blob(envChunks, { type: 'video/webm' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = `holographic_world_${Date.now()}.webm`; a.click();
-      URL.revokeObjectURL(url);
+function recordEnvironmentVideo(){
+  if(!envMesh||envRecording)return;
+  if(playingBack)stopPlayback();if(scanning)toggleScan();pointsMesh.geometry.setDrawRange(0,0);
+  envChunks=[];
+  const opts={mimeType:'video/webm;codecs=vp9',videoBitsPerSecond:8500000};
+  if(!MediaRecorder.isTypeSupported(opts.mimeType))opts.mimeType='video/webm';
+  envRecorder=new MediaRecorder($('c3').captureStream(30),opts);
+  envRecorder.ondataavailable=e=>{if(e.data.size>0)envChunks.push(e.data);};
+  envRecorder.onstop=()=>{
+    envRecording=false;$('shareEnvBtn').textContent='Share Environment Video';$('shareEnvBtn').disabled=false;$('recInd').classList.remove('on');
+    if(envChunks.length){
+      const url=URL.createObjectURL(new Blob(envChunks,{type:'video/webm'}));
+      const a=document.createElement('a');a.href=url;a.download=`holographic_world_${Date.now()}.webm`;a.click();URL.revokeObjectURL(url);
     }
   };
-  envRecorder.start(100);
-  envRecording = true;
-  $('shareEnvBtn').textContent = 'Recording 12s…';
-  $('shareEnvBtn').disabled = true;
-  $('recInd').classList.add('on');
-  ctrl.autoRotate = true;
-  ctrl.autoRotateSpeed = 0.85;
-  setTimeout(() => { if (envRecorder && envRecorder.state !== 'inactive') envRecorder.stop(); }, 12000);
+  envRecorder.start(100);envRecording=true;
+  $('shareEnvBtn').textContent='Recording 12s…';$('shareEnvBtn').disabled=true;$('recInd').classList.add('on');
+  ctrl.autoRotate=true;ctrl.autoRotateSpeed=0.85;
+  setTimeout(()=>{if(envRecorder&&envRecorder.state!=='inactive')envRecorder.stop();},12000);
 }
 
-function uploadEnvironment(e) {
-  const file = e.target.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    try {
-      const data = JSON.parse(ev.target.result);
-      if (!data.positions || !data.colors) throw new Error('bad file');
+function uploadEnvironment(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(!data.positions||!data.colors)throw 0;
       clearEnvironment();
-      finalizeEnvironment(Array.from(data.positions), Array.from(data.colors));
-    } catch (err) { alert('Invalid environment file'); }
+      finalizeEnvironment(Array.from(data.positions),Array.from(data.colors));
+    }catch{alert('Invalid environment file');}
   };
-  reader.readAsText(file); e.target.value = '';
+  reader.readAsText(file);e.target.value='';
 }
-
-function uploadSequence(e) {
-  const file = e.target.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    try {
-      const data = JSON.parse(ev.target.result);
-      sequenceFrames = data.frames.map(f => ({
-        t: f.t, n: f.n,
-        pos: new Float32Array(f.pos), col: new Float32Array(f.col)
-      }));
-      $('frameCount').textContent = sequenceFrames.length;
-      $('playBtn').disabled = false;
-      $('dlSeqBtn').disabled = false;
-      $('buildSeqBtn').disabled = false;
+function uploadSequence(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      sequenceFrames=data.frames.map(f=>({t:f.t,n:f.n,pos:new Float32Array(f.pos),col:new Float32Array(f.col)}));
+      $('frameCount').textContent=sequenceFrames.length;
+      $('playBtn').disabled=false;$('dlSeqBtn').disabled=false;$('buildSeqBtn').disabled=false;
       alert(`Loaded ${sequenceFrames.length} frames`);
-    } catch (err) { alert('Invalid sequence file'); }
+    }catch{alert('Invalid sequence file');}
   };
-  reader.readAsText(file); e.target.value = '';
+  reader.readAsText(file);e.target.value='';
 }
-
-function uploadVideo(e) {
-  const file = e.target.files[0]; if (!file) return;
-  recordedVideoBlob = file;
-  $('buildVidBtn').disabled = false;
-  $('buildStatus').textContent = 'Video loaded – ready to build';
-  e.target.value = '';
+function uploadVideo(e){
+  const file=e.target.files[0];if(!file)return;
+  recordedVideoBlob=file;$('buildVidBtn').disabled=false;$('buildStatus').textContent='Video loaded – ready to build';
+  e.target.value='';
 }
 </script>
 </body>

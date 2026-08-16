@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HyperStream XD • Engine v5.5</title>
+<title>HyperStream XD • Engine v5.6</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#020617;color:#f8fafc;font-family:system-ui,sans-serif;height:100vh;display:flex;overflow:hidden}
@@ -37,7 +37,7 @@ video{display:none}
 </head>
 <body>
 <div id="sidebar">
-  <div style="font-size:13px;font-weight:900;color:#38bdf8;margin-bottom:4px">HYPERSTREAM XD • v5.5</div>
+  <div style="font-size:13px;font-weight:900;color:#38bdf8;margin-bottom:4px">HYPERSTREAM XD • v5.6</div>
   <div style="font-size:10px;color:#64748b;margin-bottom:6px">Video → 3D Spatial Environment</div>
 
   <div class="card">
@@ -154,7 +154,7 @@ function init3() {
 
   ctrl = new THREE.OrbitControls(cam, ren.domElement);
   ctrl.enableDamping = true;
-  ctrl.autoRotate = true;          // default on
+  ctrl.autoRotate = true;
   ctrl.autoRotateSpeed = 0.7;
 
   scene.add(new THREE.AmbientLight(0xffffff, 1.15));
@@ -203,14 +203,26 @@ function initCam() {
 }
 
 function loop(now) {
+  // Hard lock: never allow spinning while Live Scan is active
+  if (scanning) {
+    ctrl.autoRotate = false;
+  }
+
   ctrl.update();
+
   fc++;
   if (now - ft > 1000) {
     $('fpsD').textContent = Math.round(fc * 1000 / (now - ft));
-    fc = 0; ft = now;
+    fc = 0;
+    ft = now;
   }
-  if (playingBack) playbackStep(now);
-  else if (scanning && ready && video.readyState >= 2) sample(now);
+
+  if (playingBack) {
+    playbackStep(now);
+  } else if (scanning && ready && video.readyState >= 2) {
+    sample(now);
+  }
+
   ren.render(scene, cam);
 }
 
@@ -258,12 +270,14 @@ function toggleScan() {
   b.textContent = scanning ? 'STOP LIVE SCAN' : 'ACTIVATE LIVE SCAN';
   b.classList.toggle('on', scanning);
 
-  // ★ Key change: no spinning while scanning
-  ctrl.autoRotate = !scanning;
+  // Immediately stop spinning when scan starts
+  ctrl.autoRotate = false;
 
   if (!scanning && !playingBack) {
     pointsMesh.geometry.setDrawRange(0, 0);
     $('nLive').textContent = '0';
+    // Re-enable spinning only when scan is off
+    ctrl.autoRotate = true;
   }
 }
 
@@ -331,7 +345,7 @@ function downloadVideo() {
 function exportSequence() {
   if (!sequenceFrames.length) return;
   const payload = {
-    version: 'HyperStreamXD-5.5',
+    version: 'HyperStreamXD-5.6',
     frames: sequenceFrames.map(f => ({ t: Math.round(f.t), n: f.n, pos: Array.from(f.pos), col: Array.from(f.col) }))
   };
   const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
@@ -348,7 +362,7 @@ function startPlayback() {
   playingBack = true; playbackIndex = 0; playbackLastTime = performance.now();
   $('playBtn').textContent = '■ STOP PLAYBACK';
   $('recStatus').textContent = 'Playing Sequence'; $('recStatus').style.color = '#a78bfa';
-  ctrl.autoRotate = true; // allow spin during playback
+  ctrl.autoRotate = true;
 }
 
 function stopPlayback() {
@@ -521,7 +535,7 @@ function buildFromVideo() {
 function saveEnvironment() {
   if (!envPos) return;
   const payload = {
-    version: 'HyperStreamXD-Environment-5.5',
+    version: 'HyperStreamXD-Environment-5.6',
     pointCount: envPos.length/3,
     positions: Array.from(envPos),
     colors: Array.from(envCol)

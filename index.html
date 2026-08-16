@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HyperStream XD • Engine v5.3</title>
+<title>HyperStream XD • Engine v5.4</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#020617;color:#f8fafc;font-family:system-ui,sans-serif;height:100vh;display:flex;overflow:hidden}
-#sidebar{width:380px;background:#030712;border-right:1px solid #1e293b;padding:12px;display:flex;flex-direction:column;gap:8px;overflow-y:auto;z-index:10}
+#sidebar{width:390px;background:#030712;border-right:1px solid #1e293b;padding:12px;display:flex;flex-direction:column;gap:8px;overflow-y:auto;z-index:10}
 .card{background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:7px}
 .title{font-size:9px;font-weight:800;text-transform:uppercase;color:#94a3b8;letter-spacing:.5px}
 .row{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#cbd5e1}
@@ -30,14 +30,15 @@ canvas{display:block;width:100%;height:100%}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 video{display:none}
 .small{font-size:10px;color:#64748b;line-height:1.35}
+.status-msg{font-size:10px;color:#38bdf8;min-height:14px}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
 <div id="sidebar">
-  <div style="font-size:13px;font-weight:900;color:#38bdf8;margin-bottom:4px">HYPERSTREAM XD • v5.3</div>
-  <div style="font-size:10px;color:#64748b;margin-bottom:6px">Holographic Recorder + Spatial Environment</div>
+  <div style="font-size:13px;font-weight:900;color:#38bdf8;margin-bottom:4px">HYPERSTREAM XD • v5.4</div>
+  <div style="font-size:10px;color:#64748b;margin-bottom:6px">Video → 3D Spatial Environment</div>
 
   <div class="card">
     <div class="title">Live Matrix Control</div>
@@ -60,22 +61,26 @@ video{display:none}
   </div>
 
   <div class="card">
-    <div class="title">Construct Room</div>
+    <div class="title">Construct 3D Environment</div>
     <div class="row"><span>Environment Points</span><b id="envPoints" style="color:#34d399">0</b></div>
-    <button class="btn-p" id="buildEnvBtn" onclick="buildEnvironment()" disabled>Build 3D Environment from Sequence</button>
+    <div class="status-msg" id="buildStatus"></div>
+    <button class="btn-p" id="buildSeqBtn" onclick="buildFromSequence()" disabled>Build from Sequence</button>
+    <button class="btn-o" id="buildVidBtn" onclick="buildFromVideo()" disabled>Build from Recorded Video</button>
     <button class="btn-g" id="saveEnvBtn" onclick="saveEnvironment()" disabled>Save Environment (JSON)</button>
     <button class="btn-o" id="shareEnvBtn" onclick="recordEnvironmentVideo()" disabled>Share Environment Video</button>
     <button class="btn-d" id="clearEnvBtn" onclick="clearEnvironment()" disabled>Clear Environment</button>
-    <div class="small">Builds a clean holographic spatial map. You can save it or record a shareable orbiting video.</div>
+    <div class="small">Build a holographic spatial map from either the point-cloud sequence or by re-processing the recorded video.</div>
   </div>
 
   <div class="card">
     <div class="title">Upload</div>
-    <div class="small" style="margin-bottom:4px">Load a previously saved file</div>
+    <div class="small">Load previous work</div>
     <input type="file" id="uploadEnv" accept=".json" onchange="uploadEnvironment(event)">
-    <div class="small" style="margin-top:6px">Environment JSON</div>
+    <div class="small" style="margin-top:4px">Environment JSON</div>
     <input type="file" id="uploadSeq" accept=".json" onchange="uploadSequence(event)">
-    <div class="small" style="margin-top:4px">3D Sequence JSON (optional)</div>
+    <div class="small" style="margin-top:4px">3D Sequence JSON</div>
+    <input type="file" id="uploadVid" accept="video/*,.webm,.mp4" onchange="uploadVideo(event)">
+    <div class="small" style="margin-top:4px">Video file (for Build from Video)</div>
   </div>
 </div>
 
@@ -97,10 +102,11 @@ let scanning = false;
 let stepSize = 2, depthMul = 90;
 let fc = 0, ft = 0;
 
-// Recording state
+// Recording
 let recording = false;
 let mediaRecorder = null;
 let recordedChunks = [];
+let recordedVideoBlob = null;          // kept so we can rebuild from the actual video
 let sequenceFrames = [];
 let recStartTime = 0;
 let recTimerInterval = null;
@@ -111,7 +117,7 @@ let playbackIndex = 0;
 let playbackLastTime = 0;
 const PLAYBACK_FPS = 12;
 
-// Live / playback points
+// Live mesh
 let pointsMesh = null;
 let posAttr = null;
 let colAttr = null;
@@ -122,11 +128,10 @@ let envMesh = null;
 let envPos = null;
 let envCol = null;
 
-// Environment video recording
+// Environment video share
 let envRecording = false;
 let envRecorder = null;
 let envChunks = [];
-let envRecTimeout = null;
 
 window.addEventListener('DOMContentLoaded', () => {
   init3();
@@ -168,14 +173,9 @@ function init3() {
   geo.setDrawRange(0, 0);
 
   const mat = new THREE.PointsMaterial({
-    size: 0.018,
-    vertexColors: true,
-    transparent: true,
-    opacity: 0.92,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false
+    size: 0.018, vertexColors: true, transparent: true,
+    opacity: 0.92, blending: THREE.AdditiveBlending, depthWrite: false
   });
-
   pointsMesh = new THREE.Points(geo, mat);
   scene.add(pointsMesh);
 
@@ -184,7 +184,6 @@ function init3() {
     cam.updateProjectionMatrix();
     ren.setSize(box.clientWidth, box.clientHeight);
   });
-
   ren.setAnimationLoop(loop);
 }
 
@@ -196,13 +195,11 @@ function initCam() {
   navigator.mediaDevices?.getUserMedia({
     video: { width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 30 } },
     audio: false
-  })
-  .then(s => {
+  }).then(s => {
     stream = s;
     video.srcObject = s;
     return video.play();
-  })
-  .then(() => { ready = true; })
+  }).then(() => { ready = true; })
   .catch(() => {
     $('scanBtn').textContent = 'CAMERA BLOCKED';
     $('scanBtn').disabled = true;
@@ -211,72 +208,50 @@ function initCam() {
 
 function loop(now) {
   ctrl.update();
-
   fc++;
   if (now - ft > 1000) {
     $('fpsD').textContent = Math.round(fc * 1000 / (now - ft));
-    fc = 0;
-    ft = now;
+    fc = 0; ft = now;
   }
-
-  if (playingBack) {
-    playbackStep(now);
-  } else if (scanning && ready && video.readyState >= 2) {
-    sample(now);
-  }
-
+  if (playingBack) playbackStep(now);
+  else if (scanning && ready && video.readyState >= 2) sample(now);
   ren.render(scene, cam);
 }
 
 function sample(now) {
-  const w = video.videoWidth || 640;
-  const h = video.videoHeight || 480;
-  if (c2d.width !== w || c2d.height !== h) {
-    c2d.width = w;
-    c2d.height = h;
-  }
-
+  const w = video.videoWidth || 640, h = video.videoHeight || 480;
+  if (c2d.width !== w || c2d.height !== h) { c2d.width = w; c2d.height = h; }
   try { ctx.drawImage(video, 0, 0, w, h); } catch { return; }
+  let pix; try { pix = ctx.getImageData(0, 0, w, h).data; } catch { return; }
 
-  let pix;
-  try { pix = ctx.getImageData(0, 0, w, h).data; } catch { return; }
-
-  const step = Math.max(1, stepSize | 0);
-  const sx = 1.7, sy = 1.7;
+  const step = Math.max(1, stepSize|0);
   let count = 0;
-
   for (let y = 0; y < h && count < MAX_POINTS; y += step) {
     for (let x = 0; x < w && count < MAX_POINTS; x += step) {
-      const i = (y * w + x) * 4;
-      const r = pix[i] / 255, g = pix[i+1] / 255, b = pix[i+2] / 255;
+      const i = (y*w + x)*4;
+      const r = pix[i]/255, g = pix[i+1]/255, b = pix[i+2]/255;
       const lum = 0.299*r + 0.587*g + 0.114*b;
       if (lum < 0.025) continue;
-
-      const nx = ((w - x) / w) * 2 - 1;
-      const ny = -((y / h) * 2 - 1);
+      const nx = ((w-x)/w)*2-1, ny = -((y/h)*2-1);
       const nz = (1.0 - lum - 0.5) * (depthMul * 0.038);
-
-      const idx = count * 3;
-      posAttr.array[idx] = nx * sx;
-      posAttr.array[idx+1] = ny * sy;
-      posAttr.array[idx+2] = nz;
-      colAttr.array[idx] = r;
-      colAttr.array[idx+1] = g;
-      colAttr.array[idx+2] = b;
+      const idx = count*3;
+      posAttr.array[idx] = nx*1.7; posAttr.array[idx+1] = ny*1.7; posAttr.array[idx+2] = nz;
+      colAttr.array[idx] = r; colAttr.array[idx+1] = g; colAttr.array[idx+2] = b;
       count++;
     }
   }
-
-  posAttr.needsUpdate = true;
-  colAttr.needsUpdate = true;
+  posAttr.needsUpdate = true; colAttr.needsUpdate = true;
   pointsMesh.geometry.setDrawRange(0, count);
   $('nLive').textContent = count.toLocaleString();
 
   if (recording && (now - lastCaptureTime >= CAPTURE_INTERVAL)) {
     lastCaptureTime = now;
-    const posCopy = new Float32Array(posAttr.array.buffer.slice(0, count * 3 * 4));
-    const colCopy = new Float32Array(colAttr.array.buffer.slice(0, count * 3 * 4));
-    sequenceFrames.push({ t: now - recStartTime, n: count, pos: posCopy, col: colCopy });
+    sequenceFrames.push({
+      t: now - recStartTime,
+      n: count,
+      pos: new Float32Array(posAttr.array.buffer.slice(0, count*3*4)),
+      col: new Float32Array(colAttr.array.buffer.slice(0, count*3*4))
+    });
     $('frameCount').textContent = sequenceFrames.length;
   }
 }
@@ -292,42 +267,36 @@ function toggleScan() {
   }
 }
 
-function toggleRecord() {
-  recording ? stopRecording() : startRecording();
-}
+function toggleRecord() { recording ? stopRecording() : startRecording(); }
 
 function startRecording() {
-  if (!scanning) {
-    alert('Activate Live Scan first.');
-    return;
-  }
+  if (!scanning) { alert('Activate Live Scan first.'); return; }
   recordedChunks = [];
   sequenceFrames = [];
+  recordedVideoBlob = null;
   lastCaptureTime = 0;
   recStartTime = performance.now();
 
   const canvasStream = $('c3').captureStream(30);
-  const options = { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 6000000 };
-  if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-    options.mimeType = 'video/webm';
-  }
-  mediaRecorder = new MediaRecorder(canvasStream, options);
+  const opts = { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 6000000 };
+  if (!MediaRecorder.isTypeSupported(opts.mimeType)) opts.mimeType = 'video/webm';
+  mediaRecorder = new MediaRecorder(canvasStream, opts);
 
   mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
   mediaRecorder.onstop = () => {
+    recordedVideoBlob = new Blob(recordedChunks, { type: 'video/webm' });
     $('dlVideoBtn').disabled = recordedChunks.length === 0;
     $('dlSeqBtn').disabled = sequenceFrames.length === 0;
     $('playBtn').disabled = sequenceFrames.length === 0;
-    $('buildEnvBtn').disabled = sequenceFrames.length === 0;
+    $('buildSeqBtn').disabled = sequenceFrames.length === 0;
+    $('buildVidBtn').disabled = !recordedVideoBlob;
   };
 
   mediaRecorder.start(100);
   recording = true;
   $('recBtn').textContent = '■ STOP RECORDING';
-  $('recBtn').classList.remove('btn-g');
-  $('recBtn').classList.add('btn-d');
-  $('recStatus').textContent = 'Recording…';
-  $('recStatus').style.color = '#f87171';
+  $('recBtn').classList.remove('btn-g'); $('recBtn').classList.add('btn-d');
+  $('recStatus').textContent = 'Recording…'; $('recStatus').style.color = '#f87171';
   $('recInd').classList.add('on');
   $('frameCount').textContent = '0';
   recTimerInterval = setInterval(updateRecTimer, 200);
@@ -339,19 +308,15 @@ function stopRecording() {
   if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
   clearInterval(recTimerInterval);
   $('recBtn').textContent = '● START RECORDING';
-  $('recBtn').classList.remove('btn-d');
-  $('recBtn').classList.add('btn-g');
-  $('recStatus').textContent = 'Stopped';
-  $('recStatus').style.color = '#94a3b8';
+  $('recBtn').classList.remove('btn-d'); $('recBtn').classList.add('btn-g');
+  $('recStatus').textContent = 'Stopped'; $('recStatus').style.color = '#94a3b8';
   $('recInd').classList.remove('on');
 }
 
 function updateRecTimer() {
   if (!recording) return;
-  const elapsed = (performance.now() - recStartTime) / 1000;
-  const m = Math.floor(elapsed / 60).toString().padStart(2, '0');
-  const s = Math.floor(elapsed % 60).toString().padStart(2, '0');
-  $('recTime').textContent = `${m}:${s}`;
+  const e = (performance.now() - recStartTime)/1000;
+  $('recTime').textContent = Math.floor(e/60).toString().padStart(2,'0') + ':' + Math.floor(e%60).toString().padStart(2,'0');
 }
 
 function downloadVideo() {
@@ -359,74 +324,87 @@ function downloadVideo() {
   const blob = new Blob(recordedChunks, { type: 'video/webm' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url;
-  a.download = `hyperstream_hologram_${Date.now()}.webm`;
-  a.click();
+  a.href = url; a.download = `hyperstream_${Date.now()}.webm`; a.click();
   URL.revokeObjectURL(url);
 }
 
 function exportSequence() {
   if (!sequenceFrames.length) return;
   const payload = {
-    version: 'HyperStreamXD-5.3',
-    frameCount: sequenceFrames.length,
-    frames: sequenceFrames.map(f => ({
-      t: Math.round(f.t), n: f.n,
-      pos: Array.from(f.pos), col: Array.from(f.col)
-    }))
+    version: 'HyperStreamXD-5.4',
+    frames: sequenceFrames.map(f => ({ t: Math.round(f.t), n: f.n, pos: Array.from(f.pos), col: Array.from(f.col) }))
   };
   const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `hyperstream_3d_sequence_${Date.now()}.json`;
-  a.click();
+  const a = document.createElement('a'); a.href = url; a.download = `sequence_${Date.now()}.json`; a.click();
   URL.revokeObjectURL(url);
 }
 
-function togglePlayback() {
-  playingBack ? stopPlayback() : startPlayback();
-}
+function togglePlayback() { playingBack ? stopPlayback() : startPlayback(); }
 
 function startPlayback() {
   if (!sequenceFrames.length) return;
   if (scanning) toggleScan();
-  playingBack = true;
-  playbackIndex = 0;
-  playbackLastTime = performance.now();
+  playingBack = true; playbackIndex = 0; playbackLastTime = performance.now();
   $('playBtn').textContent = '■ STOP PLAYBACK';
-  $('recStatus').textContent = 'Playing 3D Sequence';
-  $('recStatus').style.color = '#a78bfa';
+  $('recStatus').textContent = 'Playing Sequence'; $('recStatus').style.color = '#a78bfa';
 }
 
 function stopPlayback() {
   playingBack = false;
   $('playBtn').textContent = '▶ PLAY 3D SEQUENCE';
-  $('recStatus').textContent = 'Idle';
-  $('recStatus').style.color = '#94a3b8';
-  pointsMesh.geometry.setDrawRange(0, 0);
-  $('nLive').textContent = '0';
+  $('recStatus').textContent = 'Idle'; $('recStatus').style.color = '#94a3b8';
+  pointsMesh.geometry.setDrawRange(0, 0); $('nLive').textContent = '0';
 }
 
 function playbackStep(now) {
   if (!sequenceFrames.length) return;
-  if (now - playbackLastTime < 1000 / PLAYBACK_FPS) return;
+  if (now - playbackLastTime < 1000/PLAYBACK_FPS) return;
   playbackLastTime = now;
-  const frame = sequenceFrames[playbackIndex];
-  posAttr.array.set(frame.pos);
-  colAttr.array.set(frame.col);
-  posAttr.needsUpdate = true;
-  colAttr.needsUpdate = true;
-  pointsMesh.geometry.setDrawRange(0, frame.n);
-  $('nLive').textContent = frame.n.toLocaleString();
+  const f = sequenceFrames[playbackIndex];
+  posAttr.array.set(f.pos); colAttr.array.set(f.col);
+  posAttr.needsUpdate = true; colAttr.needsUpdate = true;
+  pointsMesh.geometry.setDrawRange(0, f.n);
+  $('nLive').textContent = f.n.toLocaleString();
   playbackIndex = (playbackIndex + 1) % sequenceFrames.length;
 }
 
-/* ===================== CONSTRUCT ROOM ===================== */
-function buildEnvironment() {
+/* ===================== BUILD ENVIRONMENT ===================== */
+function finalizeEnvironment(mergedPos, mergedCol) {
+  if (mergedPos.length < 300) {
+    $('buildStatus').textContent = 'Not enough points – record longer.';
+    return;
+  }
+  clearEnvironment();
+  envPos = new Float32Array(mergedPos);
+  envCol = new Float32Array(mergedCol);
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(envPos, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(envCol, 3));
+  const mat = new THREE.PointsMaterial({
+    size: 0.022, vertexColors: true, transparent: true,
+    opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false
+  });
+  envMesh = new THREE.Points(geo, mat);
+  scene.add(envMesh);
+
+  $('envPoints').textContent = (envPos.length/3).toLocaleString();
+  $('clearEnvBtn').disabled = false;
+  $('saveEnvBtn').disabled = false;
+  $('shareEnvBtn').disabled = false;
+  $('buildSeqBtn').disabled = sequenceFrames.length === 0;
+  $('buildVidBtn').disabled = !recordedVideoBlob;
+  $('buildStatus').textContent = 'Environment ready';
+  cam.position.set(0, 0.7, 5.0);
+  ctrl.target.set(0, 0, 0);
+  ctrl.autoRotate = true;
+}
+
+function buildFromSequence() {
   if (!sequenceFrames.length) return;
   if (playingBack) stopPlayback();
-  clearEnvironment();
+  $('buildStatus').textContent = 'Building from sequence…';
 
   const TARGET = 100000;
   const maxFrames = Math.min(sequenceFrames.length, 48);
@@ -438,109 +416,150 @@ function buildEnvironment() {
     const f = sequenceFrames[fi];
     const progress = fi / Math.max(1, sequenceFrames.length - 1);
     const zOffset = (progress - 0.5) * depthSpread;
-    const keepChance = Math.min(1, (TARGET / sequenceFrames.length) / Math.max(1, f.n));
-
+    const keep = Math.min(1, (TARGET / sequenceFrames.length) / Math.max(1, f.n));
     for (let p = 0; p < f.n; p++) {
-      if (Math.random() > keepChance) continue;
-      const idx = p * 3;
-      const j = 0.012;
-      mergedPos.push(
-        f.pos[idx] + (Math.random()-0.5)*j,
-        f.pos[idx+1] + (Math.random()-0.5)*j,
-        f.pos[idx+2] + zOffset + (Math.random()-0.5)*j
-      );
+      if (Math.random() > keep) continue;
+      const idx = p * 3, j = 0.012;
+      mergedPos.push(f.pos[idx]+(Math.random()-0.5)*j, f.pos[idx+1]+(Math.random()-0.5)*j, f.pos[idx+2]+zOffset+(Math.random()-0.5)*j);
       mergedCol.push(f.col[idx], f.col[idx+1], f.col[idx+2]);
       if (mergedPos.length/3 >= TARGET) break;
     }
     if (mergedPos.length/3 >= TARGET) break;
   }
+  finalizeEnvironment(mergedPos, mergedCol);
+}
 
-  if (mergedPos.length < 300) {
-    alert('Not enough points. Record a longer or denser sequence.');
+function buildFromVideo() {
+  if (!recordedVideoBlob) {
+    alert('No recorded video available. Record first or upload a video.');
     return;
   }
+  if (playingBack) stopPlayback();
+  $('buildStatus').textContent = 'Processing video frames…';
+  $('buildVidBtn').disabled = true;
 
-  envPos = new Float32Array(mergedPos);
-  envCol = new Float32Array(mergedCol);
+  const tempVideo = document.createElement('video');
+  tempVideo.muted = true;
+  tempVideo.playsInline = true;
+  tempVideo.src = URL.createObjectURL(recordedVideoBlob);
 
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.BufferAttribute(envPos, 3));
-  geo.setAttribute('color', new THREE.BufferAttribute(envCol, 3));
+  const tempCanvas = document.createElement('canvas');
+  const tempCtx = tempCanvas.getContext('2d', { willReadFrequently: true });
+  const collected = [];
 
-  const mat = new THREE.PointsMaterial({
-    size: 0.022,
-    vertexColors: true,
-    transparent: true,
-    opacity: 0.85,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false
+  tempVideo.addEventListener('loadedmetadata', () => {
+    const duration = tempVideo.duration;
+    const frameInterval = 0.12; // ~8 fps sampling
+    let t = 0;
+
+    function processNext() {
+      if (t > duration) {
+        URL.revokeObjectURL(tempVideo.src);
+        // Now merge the collected frames the same way
+        const TARGET = 100000;
+        const mergedPos = [], mergedCol = [];
+        const depthSpread = 2.8;
+        const step = Math.max(1, Math.floor(collected.length / 40));
+
+        for (let i = 0; i < collected.length; i += step) {
+          const f = collected[i];
+          const progress = i / Math.max(1, collected.length - 1);
+          const zOffset = (progress - 0.5) * depthSpread;
+          const keep = Math.min(1, (TARGET / collected.length) / Math.max(1, f.n));
+          for (let p = 0; p < f.n; p++) {
+            if (Math.random() > keep) continue;
+            const idx = p*3, j = 0.012;
+            mergedPos.push(f.pos[idx]+(Math.random()-0.5)*j, f.pos[idx+1]+(Math.random()-0.5)*j, f.pos[idx+2]+zOffset+(Math.random()-0.5)*j);
+            mergedCol.push(f.col[idx], f.col[idx+1], f.col[idx+2]);
+            if (mergedPos.length/3 >= TARGET) break;
+          }
+          if (mergedPos.length/3 >= TARGET) break;
+        }
+        finalizeEnvironment(mergedPos, mergedCol);
+        return;
+      }
+
+      tempVideo.currentTime = t;
+    }
+
+    tempVideo.addEventListener('seeked', () => {
+      const w = tempVideo.videoWidth || 640, h = tempVideo.videoHeight || 480;
+      tempCanvas.width = w; tempCanvas.height = h;
+      tempCtx.drawImage(tempVideo, 0, 0, w, h);
+      let pix;
+      try { pix = tempCtx.getImageData(0, 0, w, h).data; } catch { t += frameInterval; processNext(); return; }
+
+      const step = Math.max(2, stepSize|0);
+      const pos = [], col = [];
+      let count = 0;
+      for (let y = 0; y < h && count < 25000; y += step) {
+        for (let x = 0; x < w && count < 25000; x += step) {
+          const i = (y*w + x)*4;
+          const r = pix[i]/255, g = pix[i+1]/255, b = pix[i+2]/255;
+          const lum = 0.299*r + 0.587*g + 0.114*b;
+          if (lum < 0.03) continue;
+          const nx = ((w-x)/w)*2-1, ny = -((y/h)*2-1);
+          const nz = (1.0 - lum - 0.5) * (depthMul * 0.038);
+          pos.push(nx*1.7, ny*1.7, nz);
+          col.push(r, g, b);
+          count++;
+        }
+      }
+      if (count > 50) {
+        collected.push({ n: count, pos: new Float32Array(pos), col: new Float32Array(col) });
+      }
+      $('buildStatus').textContent = `Processing video… ${Math.min(100, Math.round(t/duration*100))}%`;
+      t += frameInterval;
+      processNext();
+    });
+
+    processNext();
   });
 
-  envMesh = new THREE.Points(geo, mat);
-  scene.add(envMesh);
-
-  $('envPoints').textContent = (envPos.length/3).toLocaleString();
-  $('clearEnvBtn').disabled = false;
-  $('saveEnvBtn').disabled = false;
-  $('shareEnvBtn').disabled = false;
-  $('buildEnvBtn').disabled = true;
-
-  cam.position.set(0, 0.7, 5.0);
-  ctrl.target.set(0, 0, 0);
-  ctrl.autoRotate = true;
-  ctrl.update();
+  tempVideo.load();
 }
 
 function saveEnvironment() {
-  if (!envPos || !envCol) return;
+  if (!envPos) return;
   const payload = {
-    version: 'HyperStreamXD-Environment-5.3',
-    pointCount: envPos.length / 3,
+    version: 'HyperStreamXD-Environment-5.4',
+    pointCount: envPos.length/3,
     positions: Array.from(envPos),
     colors: Array.from(envCol)
   };
   const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `hyperstream_environment_${Date.now()}.json`;
-  a.click();
+  const a = document.createElement('a'); a.href = url; a.download = `environment_${Date.now()}.json`; a.click();
   URL.revokeObjectURL(url);
 }
 
 function clearEnvironment() {
   if (envMesh) {
     scene.remove(envMesh);
-    envMesh.geometry.dispose();
-    envMesh.material.dispose();
+    envMesh.geometry.dispose(); envMesh.material.dispose();
     envMesh = null;
   }
-  envPos = null;
-  envCol = null;
+  envPos = null; envCol = null;
   $('envPoints').textContent = '0';
   $('clearEnvBtn').disabled = true;
   $('saveEnvBtn').disabled = true;
   $('shareEnvBtn').disabled = true;
-  $('buildEnvBtn').disabled = sequenceFrames.length === 0;
+  $('buildSeqBtn').disabled = sequenceFrames.length === 0;
+  $('buildVidBtn').disabled = !recordedVideoBlob;
+  $('buildStatus').textContent = '';
 }
 
-/* ===== Shareable Environment Video ===== */
 function recordEnvironmentVideo() {
   if (!envMesh || envRecording) return;
-
-  // Make sure we are looking at the environment
   if (playingBack) stopPlayback();
   if (scanning) toggleScan();
   pointsMesh.geometry.setDrawRange(0, 0);
 
   envChunks = [];
   const canvasStream = $('c3').captureStream(30);
-  const options = { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 8000000 };
-  if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-    options.mimeType = 'video/webm';
-  }
-
-  envRecorder = new MediaRecorder(canvasStream, options);
+  const opts = { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 8000000 };
+  if (!MediaRecorder.isTypeSupported(opts.mimeType)) opts.mimeType = 'video/webm';
+  envRecorder = new MediaRecorder(canvasStream, opts);
   envRecorder.ondataavailable = e => { if (e.data.size > 0) envChunks.push(e.data); };
   envRecorder.onstop = () => {
     envRecording = false;
@@ -550,102 +569,73 @@ function recordEnvironmentVideo() {
     if (envChunks.length) {
       const blob = new Blob(envChunks, { type: 'video/webm' });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `hyperstream_environment_${Date.now()}.webm`;
-      a.click();
+      const a = document.createElement('a'); a.href = url; a.download = `environment_share_${Date.now()}.webm`; a.click();
       URL.revokeObjectURL(url);
     }
   };
-
   envRecorder.start(100);
   envRecording = true;
-  $('shareEnvBtn').textContent = 'Recording… (12s)';
+  $('shareEnvBtn').textContent = 'Recording 12s…';
   $('shareEnvBtn').disabled = true;
   $('recInd').classList.add('on');
-  ctrl.autoRotate = true;
-  ctrl.autoRotateSpeed = 1.1;
-
-  // Auto-stop after 12 seconds for a clean shareable clip
-  envRecTimeout = setTimeout(() => {
-    if (envRecorder && envRecorder.state !== 'inactive') {
-      envRecorder.stop();
-    }
-  }, 12000);
+  ctrl.autoRotate = true; ctrl.autoRotateSpeed = 1.1;
+  setTimeout(() => { if (envRecorder && envRecorder.state !== 'inactive') envRecorder.stop(); }, 12000);
 }
 
-/* ===== Upload ===== */
+/* ===================== UPLOAD ===================== */
 function uploadEnvironment(e) {
-  const file = e.target.files[0];
-  if (!file) return;
+  const file = e.target.files[0]; if (!file) return;
   const reader = new FileReader();
-  reader.onload = (ev) => {
+  reader.onload = ev => {
     try {
       const data = JSON.parse(ev.target.result);
-      if (!data.positions || !data.colors) {
-        alert('Invalid environment file');
-        return;
-      }
+      if (!data.positions || !data.colors) throw new Error('bad file');
       clearEnvironment();
       envPos = new Float32Array(data.positions);
       envCol = new Float32Array(data.colors);
-
       const geo = new THREE.BufferGeometry();
       geo.setAttribute('position', new THREE.BufferAttribute(envPos, 3));
       geo.setAttribute('color', new THREE.BufferAttribute(envCol, 3));
-      const mat = new THREE.PointsMaterial({
+      envMesh = new THREE.Points(geo, new THREE.PointsMaterial({
         size: 0.022, vertexColors: true, transparent: true,
         opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false
-      });
-      envMesh = new THREE.Points(geo, mat);
+      }));
       scene.add(envMesh);
-
       $('envPoints').textContent = (envPos.length/3).toLocaleString();
       $('clearEnvBtn').disabled = false;
       $('saveEnvBtn').disabled = false;
       $('shareEnvBtn').disabled = false;
-      $('buildEnvBtn').disabled = true;
-
-      cam.position.set(0, 0.7, 5.0);
-      ctrl.target.set(0, 0, 0);
-      ctrl.autoRotate = true;
-    } catch (err) {
-      alert('Could not load environment file');
-      console.error(err);
-    }
+      cam.position.set(0, 0.7, 5.0); ctrl.target.set(0,0,0); ctrl.autoRotate = true;
+    } catch (err) { alert('Invalid environment file'); }
   };
-  reader.readAsText(file);
-  e.target.value = '';
+  reader.readAsText(file); e.target.value = '';
 }
 
 function uploadSequence(e) {
-  const file = e.target.files[0];
-  if (!file) return;
+  const file = e.target.files[0]; if (!file) return;
   const reader = new FileReader();
-  reader.onload = (ev) => {
+  reader.onload = ev => {
     try {
       const data = JSON.parse(ev.target.result);
-      if (!data.frames || !Array.isArray(data.frames)) {
-        alert('Invalid sequence file');
-        return;
-      }
       sequenceFrames = data.frames.map(f => ({
-        t: f.t,
-        n: f.n,
-        pos: new Float32Array(f.pos),
-        col: new Float32Array(f.col)
+        t: f.t, n: f.n,
+        pos: new Float32Array(f.pos), col: new Float32Array(f.col)
       }));
       $('frameCount').textContent = sequenceFrames.length;
       $('playBtn').disabled = false;
       $('dlSeqBtn').disabled = false;
-      $('buildEnvBtn').disabled = false;
-      alert(`Loaded sequence with ${sequenceFrames.length} frames`);
-    } catch (err) {
-      alert('Could not load sequence file');
-      console.error(err);
-    }
+      $('buildSeqBtn').disabled = false;
+      alert(`Loaded ${sequenceFrames.length} frames`);
+    } catch (err) { alert('Invalid sequence file'); }
   };
-  reader.readAsText(file);
+  reader.readAsText(file); e.target.value = '';
+}
+
+function uploadVideo(e) {
+  const file = e.target.files[0]; if (!file) return;
+  recordedVideoBlob = file;
+  $('buildVidBtn').disabled = false;
+  $('buildStatus').textContent = 'Video loaded – ready to build';
   e.target.value = '';
 }
 </script>

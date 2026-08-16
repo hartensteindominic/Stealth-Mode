@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HyperStream XD • Engine v5.6</title>
+<title>HyperStream XD • Engine v5.8 — Holographic World</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:#020617;color:#f8fafc;font-family:system-ui,sans-serif;height:100vh;display:flex;overflow:hidden}
@@ -37,14 +37,14 @@ video{display:none}
 </head>
 <body>
 <div id="sidebar">
-  <div style="font-size:13px;font-weight:900;color:#38bdf8;margin-bottom:4px">HYPERSTREAM XD • v5.6</div>
-  <div style="font-size:10px;color:#64748b;margin-bottom:6px">Video → 3D Spatial Environment</div>
+  <div style="font-size:13px;font-weight:900;color:#38bdf8;margin-bottom:4px">HYPERSTREAM XD • v5.8</div>
+  <div style="font-size:10px;color:#64748b;margin-bottom:6px">Holographic World Builder</div>
 
   <div class="card">
     <div class="title">Live Matrix Control</div>
     <button class="btn-d" id="scanBtn" onclick="toggleScan()">ACTIVATE LIVE SCAN</button>
     <div class="row"><span>Voxel Step</span><input type="range" min="1" max="5" value="2" oninput="stepSize=+this.value"></div>
-    <div class="row"><span>Depth Field</span><input type="range" min="20" max="180" value="90" oninput="depthMul=+this.value"></div>
+    <div class="row"><span>Depth Field</span><input type="range" min="20" max="180" value="95" oninput="depthMul=+this.value"></div>
     <div class="row"><span>Active Voxels</span><b id="nLive" style="color:#ec4899">0</b></div>
   </div>
 
@@ -61,7 +61,7 @@ video{display:none}
   </div>
 
   <div class="card">
-    <div class="title">Construct 3D Environment</div>
+    <div class="title">Construct Holographic World</div>
     <div class="row"><span>Environment Points</span><b id="envPoints" style="color:#34d399">0</b></div>
     <div class="status-msg" id="buildStatus"></div>
     <button class="btn-p" id="buildSeqBtn" onclick="buildFromSequence()" disabled>Build from Sequence</button>
@@ -69,7 +69,7 @@ video{display:none}
     <button class="btn-g" id="saveEnvBtn" onclick="saveEnvironment()" disabled>Save Environment (JSON)</button>
     <button class="btn-o" id="shareEnvBtn" onclick="recordEnvironmentVideo()" disabled>Share Environment Video</button>
     <button class="btn-d" id="clearEnvBtn" onclick="clearEnvironment()" disabled>Clear Environment</button>
-    <div class="small">Build a holographic spatial map from either the point-cloud sequence or by re-processing the recorded video.</div>
+    <div class="small">Creates a denser, more volumetric holographic world you can walk around with the mouse.</div>
   </div>
 
   <div class="card">
@@ -80,7 +80,7 @@ video{display:none}
     <input type="file" id="uploadSeq" accept=".json" onchange="uploadSequence(event)">
     <div class="small" style="margin-top:4px">3D Sequence JSON</div>
     <input type="file" id="uploadVid" accept="video/*,.webm,.mp4" onchange="uploadVideo(event)">
-    <div class="small" style="margin-top:4px">Video file (for Build from Video)</div>
+    <div class="small" style="margin-top:4px">Video file</div>
   </div>
 </div>
 
@@ -99,7 +99,7 @@ const $ = id => document.getElementById(id);
 let scene, cam, ren, ctrl, video, c2d, ctx;
 let stream = null, ready = false;
 let scanning = false;
-let stepSize = 2, depthMul = 90;
+let stepSize = 2, depthMul = 95;
 let fc = 0, ft = 0;
 
 let recording = false;
@@ -110,7 +110,7 @@ let sequenceFrames = [];
 let recStartTime = 0;
 let recTimerInterval = null;
 let lastCaptureTime = 0;
-const CAPTURE_INTERVAL = 80;
+const CAPTURE_INTERVAL = 75;
 let playingBack = false;
 let playbackIndex = 0;
 let playbackLastTime = 0;
@@ -119,11 +119,13 @@ const PLAYBACK_FPS = 12;
 let pointsMesh = null;
 let posAttr = null;
 let colAttr = null;
-const MAX_POINTS = 80000;
+const MAX_POINTS = 90000;
 
 let envMesh = null;
+let envGlow = null;          // second softer layer for holographic glow
 let envPos = null;
 let envCol = null;
+let roomGroup = null;
 
 let envRecording = false;
 let envRecorder = null;
@@ -137,10 +139,10 @@ window.addEventListener('DOMContentLoaded', () => {
 function init3() {
   const box = $('viewer');
   scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x020617, 0.012);
+  scene.fog = new THREE.FogExp2(0x020617, 0.016);
 
-  cam = new THREE.PerspectiveCamera(48, box.clientWidth / box.clientHeight, 0.05, 2000);
-  cam.position.set(0, 0.4, 3.6);
+  cam = new THREE.PerspectiveCamera(50, box.clientWidth / box.clientHeight, 0.05, 2000);
+  cam.position.set(0, 1.35, 4.8);
 
   ren = new THREE.WebGLRenderer({
     canvas: $('c3'),
@@ -155,10 +157,17 @@ function init3() {
   ctrl = new THREE.OrbitControls(cam, ren.domElement);
   ctrl.enableDamping = true;
   ctrl.autoRotate = true;
-  ctrl.autoRotateSpeed = 0.7;
+  ctrl.autoRotateSpeed = 0.5;
+  ctrl.target.set(0, 0.35, 0);
+  ctrl.minDistance = 1.8;
+  ctrl.maxDistance = 12;
 
-  scene.add(new THREE.AmbientLight(0xffffff, 1.15));
+  scene.add(new THREE.AmbientLight(0xffffff, 0.85));
+  const key = new THREE.DirectionalLight(0xa5f3fc, 0.45);
+  key.position.set(3, 6, 4);
+  scene.add(key);
 
+  // Live scanning points
   const geo = new THREE.BufferGeometry();
   const positions = new Float32Array(MAX_POINTS * 3);
   const colors = new Float32Array(MAX_POINTS * 3);
@@ -168,12 +177,18 @@ function init3() {
   geo.setAttribute('color', colAttr);
   geo.setDrawRange(0, 0);
 
-  const mat = new THREE.PointsMaterial({
-    size: 0.018, vertexColors: true, transparent: true,
-    opacity: 0.92, blending: THREE.AdditiveBlending, depthWrite: false
-  });
-  pointsMesh = new THREE.Points(geo, mat);
+  pointsMesh = new THREE.Points(geo, new THREE.PointsMaterial({
+    size: 0.017,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.93,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    sizeAttenuation: true
+  }));
   scene.add(pointsMesh);
+
+  createHolographicRoom();
 
   window.addEventListener('resize', () => {
     cam.aspect = box.clientWidth / box.clientHeight;
@@ -181,6 +196,45 @@ function init3() {
     ren.setSize(box.clientWidth, box.clientHeight);
   });
   ren.setAnimationLoop(loop);
+}
+
+function createHolographicRoom() {
+  roomGroup = new THREE.Group();
+
+  // Floor grid
+  const grid = new THREE.GridHelper(9, 28, 0x1e40af, 0x0f172a);
+  grid.position.y = -1.15;
+  grid.material.opacity = 0.4;
+  grid.material.transparent = true;
+  roomGroup.add(grid);
+
+  // Soft floor
+  const floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(9, 9),
+    new THREE.MeshBasicMaterial({ color: 0x07101f, transparent: true, opacity: 0.4, side: THREE.DoubleSide })
+  );
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.y = -1.16;
+  roomGroup.add(floor);
+
+  // Holographic bounding frame
+  const edges = new THREE.EdgesGeometry(new THREE.BoxGeometry(8.2, 4.4, 8.2));
+  const frame = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({
+    color: 0x38bdf8, transparent: true, opacity: 0.16
+  }));
+  frame.position.y = 0.95;
+  roomGroup.add(frame);
+
+  // Corner energy pillars
+  const pillarMat = new THREE.MeshBasicMaterial({ color: 0x22d3ee, transparent: true, opacity: 0.06 });
+  const pillarGeo = new THREE.CylinderGeometry(0.025, 0.025, 4.2, 6);
+  [[-3.7,0.95,-3.7],[3.7,0.95,-3.7],[-3.7,0.95,3.7],[3.7,0.95,3.7]].forEach(p => {
+    const m = new THREE.Mesh(pillarGeo, pillarMat);
+    m.position.set(...p);
+    roomGroup.add(m);
+  });
+
+  scene.add(roomGroup);
 }
 
 function initCam() {
@@ -203,25 +257,17 @@ function initCam() {
 }
 
 function loop(now) {
-  // Hard lock: never allow spinning while Live Scan is active
-  if (scanning) {
-    ctrl.autoRotate = false;
-  }
-
+  if (scanning) ctrl.autoRotate = false;
   ctrl.update();
 
   fc++;
   if (now - ft > 1000) {
     $('fpsD').textContent = Math.round(fc * 1000 / (now - ft));
-    fc = 0;
-    ft = now;
+    fc = 0; ft = now;
   }
 
-  if (playingBack) {
-    playbackStep(now);
-  } else if (scanning && ready && video.readyState >= 2) {
-    sample(now);
-  }
+  if (playingBack) playbackStep(now);
+  else if (scanning && ready && video.readyState >= 2) sample(now);
 
   ren.render(scene, cam);
 }
@@ -232,23 +278,35 @@ function sample(now) {
   try { ctx.drawImage(video, 0, 0, w, h); } catch { return; }
   let pix; try { pix = ctx.getImageData(0, 0, w, h).data; } catch { return; }
 
-  const step = Math.max(1, stepSize|0);
+  const step = Math.max(1, stepSize | 0);
   let count = 0;
+
   for (let y = 0; y < h && count < MAX_POINTS; y += step) {
     for (let x = 0; x < w && count < MAX_POINTS; x += step) {
-      const i = (y*w + x)*4;
-      const r = pix[i]/255, g = pix[i+1]/255, b = pix[i+2]/255;
+      const i = (y * w + x) * 4;
+      const r = pix[i] / 255, g = pix[i+1] / 255, b = pix[i+2] / 255;
       const lum = 0.299*r + 0.587*g + 0.114*b;
-      if (lum < 0.025) continue;
-      const nx = ((w-x)/w)*2-1, ny = -((y/h)*2-1);
-      const nz = (1.0 - lum - 0.5) * (depthMul * 0.038);
-      const idx = count*3;
-      posAttr.array[idx] = nx*1.7; posAttr.array[idx+1] = ny*1.7; posAttr.array[idx+2] = nz;
-      colAttr.array[idx] = r; colAttr.array[idx+1] = g; colAttr.array[idx+2] = b;
+      if (lum < 0.027) continue;
+
+      // Improved depth response – more natural separation
+      const depth = Math.pow(1.0 - lum, 1.4);
+      const nx = ((w - x) / w) * 2 - 1;
+      const ny = -((y / h) * 2 - 1);
+      const nz = (depth - 0.42) * (depthMul * 0.044);
+
+      const idx = count * 3;
+      posAttr.array[idx]     = nx * 1.7;
+      posAttr.array[idx + 1] = ny * 1.5 + 0.25;
+      posAttr.array[idx + 2] = nz;
+      colAttr.array[idx]     = r;
+      colAttr.array[idx + 1] = g;
+      colAttr.array[idx + 2] = b;
       count++;
     }
   }
-  posAttr.needsUpdate = true; colAttr.needsUpdate = true;
+
+  posAttr.needsUpdate = true;
+  colAttr.needsUpdate = true;
   pointsMesh.geometry.setDrawRange(0, count);
   $('nLive').textContent = count.toLocaleString();
 
@@ -257,8 +315,8 @@ function sample(now) {
     sequenceFrames.push({
       t: now - recStartTime,
       n: count,
-      pos: new Float32Array(posAttr.array.buffer.slice(0, count*3*4)),
-      col: new Float32Array(colAttr.array.buffer.slice(0, count*3*4))
+      pos: new Float32Array(posAttr.array.buffer.slice(0, count * 3 * 4)),
+      col: new Float32Array(colAttr.array.buffer.slice(0, count * 3 * 4))
     });
     $('frameCount').textContent = sequenceFrames.length;
   }
@@ -269,14 +327,11 @@ function toggleScan() {
   const b = $('scanBtn');
   b.textContent = scanning ? 'STOP LIVE SCAN' : 'ACTIVATE LIVE SCAN';
   b.classList.toggle('on', scanning);
-
-  // Immediately stop spinning when scan starts
   ctrl.autoRotate = false;
 
   if (!scanning && !playingBack) {
     pointsMesh.geometry.setDrawRange(0, 0);
     $('nLive').textContent = '0';
-    // Re-enable spinning only when scan is off
     ctrl.autoRotate = true;
   }
 }
@@ -292,7 +347,7 @@ function startRecording() {
   recStartTime = performance.now();
 
   const canvasStream = $('c3').captureStream(30);
-  const opts = { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 6000000 };
+  const opts = { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 6500000 };
   if (!MediaRecorder.isTypeSupported(opts.mimeType)) opts.mimeType = 'video/webm';
   mediaRecorder = new MediaRecorder(canvasStream, opts);
 
@@ -329,7 +384,7 @@ function stopRecording() {
 
 function updateRecTimer() {
   if (!recording) return;
-  const e = (performance.now() - recStartTime)/1000;
+  const e = (performance.now() - recStartTime) / 1000;
   $('recTime').textContent = Math.floor(e/60).toString().padStart(2,'0') + ':' + Math.floor(e%60).toString().padStart(2,'0');
 }
 
@@ -345,8 +400,11 @@ function downloadVideo() {
 function exportSequence() {
   if (!sequenceFrames.length) return;
   const payload = {
-    version: 'HyperStreamXD-5.6',
-    frames: sequenceFrames.map(f => ({ t: Math.round(f.t), n: f.n, pos: Array.from(f.pos), col: Array.from(f.col) }))
+    version: 'HyperStreamXD-5.8',
+    frames: sequenceFrames.map(f => ({
+      t: Math.round(f.t), n: f.n,
+      pos: Array.from(f.pos), col: Array.from(f.col)
+    }))
   };
   const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -375,7 +433,7 @@ function stopPlayback() {
 
 function playbackStep(now) {
   if (!sequenceFrames.length) return;
-  if (now - playbackLastTime < 1000/PLAYBACK_FPS) return;
+  if (now - playbackLastTime < 1000 / PLAYBACK_FPS) return;
   playbackLastTime = now;
   const f = sequenceFrames[playbackIndex];
   posAttr.array.set(f.pos); colAttr.array.set(f.col);
@@ -385,72 +443,121 @@ function playbackStep(now) {
   playbackIndex = (playbackIndex + 1) % sequenceFrames.length;
 }
 
+/* ========== Improved Holographic World ========== */
 function finalizeEnvironment(mergedPos, mergedCol) {
-  if (mergedPos.length < 300) {
-    $('buildStatus').textContent = 'Not enough points – record longer.';
+  if (mergedPos.length < 400) {
+    $('buildStatus').textContent = 'Not enough points – record a bit longer.';
     return;
   }
-  clearEnvironment();
+
+  // Remove previous environment but keep the room
+  if (envMesh) {
+    scene.remove(envMesh);
+    envMesh.geometry.dispose();
+    envMesh.material.dispose();
+  }
+  if (envGlow) {
+    scene.remove(envGlow);
+    envGlow.geometry.dispose();
+    envGlow.material.dispose();
+  }
+
+  // Gentle holographic color grade (keeps original colors, adds energy)
+  for (let i = 0; i < mergedCol.length; i += 3) {
+    const r = mergedCol[i], g = mergedCol[i+1], b = mergedCol[i+2];
+    mergedCol[i]   = r * 0.78 + 0.12;
+    mergedCol[i+1] = g * 0.88 + 0.22;
+    mergedCol[i+2] = Math.min(1, b * 0.72 + 0.42);
+  }
+
   envPos = new Float32Array(mergedPos);
   envCol = new Float32Array(mergedCol);
 
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(envPos, 3));
   geo.setAttribute('color', new THREE.BufferAttribute(envCol, 3));
-  const mat = new THREE.PointsMaterial({
-    size: 0.022, vertexColors: true, transparent: true,
-    opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false
-  });
-  envMesh = new THREE.Points(geo, mat);
+
+  // Main dense layer
+  envMesh = new THREE.Points(geo, new THREE.PointsMaterial({
+    size: 0.019,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.9,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    sizeAttenuation: true
+  }));
+  envMesh.position.y = 0.2;
   scene.add(envMesh);
 
-  $('envPoints').textContent = (envPos.length/3).toLocaleString();
+  // Soft outer glow layer (makes it feel more like a real hologram)
+  const glowGeo = geo.clone();
+  envGlow = new THREE.Points(glowGeo, new THREE.PointsMaterial({
+    size: 0.045,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.22,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    sizeAttenuation: true
+  }));
+  envGlow.position.y = 0.2;
+  scene.add(envGlow);
+
+  $('envPoints').textContent = (envPos.length / 3).toLocaleString();
   $('clearEnvBtn').disabled = false;
   $('saveEnvBtn').disabled = false;
   $('shareEnvBtn').disabled = false;
   $('buildSeqBtn').disabled = sequenceFrames.length === 0;
   $('buildVidBtn').disabled = !recordedVideoBlob;
-  $('buildStatus').textContent = 'Environment ready';
-  cam.position.set(0, 0.7, 5.0);
-  ctrl.target.set(0, 0, 0);
+  $('buildStatus').textContent = 'Holographic world ready';
+
+  cam.position.set(0, 1.5, 5.4);
+  ctrl.target.set(0, 0.35, 0);
   ctrl.autoRotate = true;
 }
 
 function buildFromSequence() {
   if (!sequenceFrames.length) return;
   if (playingBack) stopPlayback();
-  $('buildStatus').textContent = 'Building from sequence…';
+  $('buildStatus').textContent = 'Building denser holographic world…';
 
-  const TARGET = 100000;
-  const maxFrames = Math.min(sequenceFrames.length, 48);
+  const TARGET = 140000; // more nodes
+  const maxFrames = Math.min(sequenceFrames.length, 55);
   const frameStep = Math.max(1, Math.floor(sequenceFrames.length / maxFrames));
   const mergedPos = [], mergedCol = [];
-  const depthSpread = 2.8;
+  const depthSpread = 2.9;
 
   for (let fi = 0; fi < sequenceFrames.length; fi += frameStep) {
     const f = sequenceFrames[fi];
     const progress = fi / Math.max(1, sequenceFrames.length - 1);
     const zOffset = (progress - 0.5) * depthSpread;
-    const keep = Math.min(1, (TARGET / sequenceFrames.length) / Math.max(1, f.n));
+    const keep = Math.min(1.0, (TARGET / sequenceFrames.length) / Math.max(1, f.n) * 1.15);
+
     for (let p = 0; p < f.n; p++) {
       if (Math.random() > keep) continue;
-      const idx = p * 3, j = 0.012;
-      mergedPos.push(f.pos[idx]+(Math.random()-0.5)*j, f.pos[idx+1]+(Math.random()-0.5)*j, f.pos[idx+2]+zOffset+(Math.random()-0.5)*j);
-      mergedCol.push(f.col[idx], f.col[idx+1], f.col[idx+2]);
-      if (mergedPos.length/3 >= TARGET) break;
+      const idx = p * 3;
+      const j = 0.011;
+      mergedPos.push(
+        f.pos[idx]     + (Math.random() - 0.5) * j,
+        f.pos[idx + 1] + (Math.random() - 0.5) * j,
+        f.pos[idx + 2] + zOffset + (Math.random() - 0.5) * j
+      );
+      mergedCol.push(f.col[idx], f.col[idx + 1], f.col[idx + 2]);
+      if (mergedPos.length / 3 >= TARGET) break;
     }
-    if (mergedPos.length/3 >= TARGET) break;
+    if (mergedPos.length / 3 >= TARGET) break;
   }
   finalizeEnvironment(mergedPos, mergedCol);
 }
 
 function buildFromVideo() {
   if (!recordedVideoBlob) {
-    alert('No recorded video available. Record first or upload a video.');
+    alert('No recorded video available.');
     return;
   }
   if (playingBack) stopPlayback();
-  $('buildStatus').textContent = 'Processing video frames…';
+  $('buildStatus').textContent = 'Processing video into holographic world…';
   $('buildVidBtn').disabled = true;
 
   const tempVideo = document.createElement('video');
@@ -464,30 +571,34 @@ function buildFromVideo() {
 
   tempVideo.addEventListener('loadedmetadata', () => {
     const duration = tempVideo.duration;
-    const frameInterval = 0.12;
+    const frameInterval = 0.1;
     let t = 0;
 
     function processNext() {
       if (t > duration) {
         URL.revokeObjectURL(tempVideo.src);
-        const TARGET = 100000;
+        const TARGET = 140000;
         const mergedPos = [], mergedCol = [];
-        const depthSpread = 2.8;
-        const step = Math.max(1, Math.floor(collected.length / 40));
+        const depthSpread = 2.9;
+        const step = Math.max(1, Math.floor(collected.length / 48));
 
         for (let i = 0; i < collected.length; i += step) {
           const f = collected[i];
           const progress = i / Math.max(1, collected.length - 1);
           const zOffset = (progress - 0.5) * depthSpread;
-          const keep = Math.min(1, (TARGET / collected.length) / Math.max(1, f.n));
+          const keep = Math.min(1.0, (TARGET / collected.length) / Math.max(1, f.n) * 1.15);
           for (let p = 0; p < f.n; p++) {
             if (Math.random() > keep) continue;
-            const idx = p*3, j = 0.012;
-            mergedPos.push(f.pos[idx]+(Math.random()-0.5)*j, f.pos[idx+1]+(Math.random()-0.5)*j, f.pos[idx+2]+zOffset+(Math.random()-0.5)*j);
+            const idx = p * 3, j = 0.011;
+            mergedPos.push(
+              f.pos[idx] + (Math.random()-0.5)*j,
+              f.pos[idx+1] + (Math.random()-0.5)*j,
+              f.pos[idx+2] + zOffset + (Math.random()-0.5)*j
+            );
             mergedCol.push(f.col[idx], f.col[idx+1], f.col[idx+2]);
-            if (mergedPos.length/3 >= TARGET) break;
+            if (mergedPos.length / 3 >= TARGET) break;
           }
-          if (mergedPos.length/3 >= TARGET) break;
+          if (mergedPos.length / 3 >= TARGET) break;
         }
         finalizeEnvironment(mergedPos, mergedCol);
         return;
@@ -502,55 +613,61 @@ function buildFromVideo() {
       let pix;
       try { pix = tempCtx.getImageData(0, 0, w, h).data; } catch { t += frameInterval; processNext(); return; }
 
-      const step = Math.max(2, stepSize|0);
+      const step = Math.max(2, stepSize | 0);
       const pos = [], col = [];
       let count = 0;
-      for (let y = 0; y < h && count < 25000; y += step) {
-        for (let x = 0; x < w && count < 25000; x += step) {
-          const i = (y*w + x)*4;
+      for (let y = 0; y < h && count < 28000; y += step) {
+        for (let x = 0; x < w && count < 28000; x += step) {
+          const i = (y * w + x) * 4;
           const r = pix[i]/255, g = pix[i+1]/255, b = pix[i+2]/255;
           const lum = 0.299*r + 0.587*g + 0.114*b;
-          if (lum < 0.03) continue;
-          const nx = ((w-x)/w)*2-1, ny = -((y/h)*2-1);
-          const nz = (1.0 - lum - 0.5) * (depthMul * 0.038);
-          pos.push(nx*1.7, ny*1.7, nz);
+          if (lum < 0.028) continue;
+          const depth = Math.pow(1.0 - lum, 1.4);
+          const nx = ((w - x) / w) * 2 - 1;
+          const ny = -((y / h) * 2 - 1);
+          const nz = (depth - 0.42) * (depthMul * 0.044);
+          pos.push(nx * 1.7, ny * 1.5 + 0.25, nz);
           col.push(r, g, b);
           count++;
         }
       }
-      if (count > 50) {
-        collected.push({ n: count, pos: new Float32Array(pos), col: new Float32Array(col) });
-      }
-      $('buildStatus').textContent = `Processing video… ${Math.min(100, Math.round(t/duration*100))}%`;
+      if (count > 50) collected.push({ n: count, pos: new Float32Array(pos), col: new Float32Array(col) });
+      $('buildStatus').textContent = `Building world… ${Math.min(100, Math.round(t / duration * 100))}%`;
       t += frameInterval;
       processNext();
     });
 
     processNext();
   });
-
   tempVideo.load();
 }
 
 function saveEnvironment() {
   if (!envPos) return;
   const payload = {
-    version: 'HyperStreamXD-Environment-5.6',
-    pointCount: envPos.length/3,
+    version: 'HyperStreamXD-HolographicWorld-5.8',
+    pointCount: envPos.length / 3,
     positions: Array.from(envPos),
     colors: Array.from(envCol)
   };
   const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = `environment_${Date.now()}.json`; a.click();
+  const a = document.createElement('a'); a.href = url; a.download = `holographic_world_${Date.now()}.json`; a.click();
   URL.revokeObjectURL(url);
 }
 
 function clearEnvironment() {
   if (envMesh) {
     scene.remove(envMesh);
-    envMesh.geometry.dispose(); envMesh.material.dispose();
+    envMesh.geometry.dispose();
+    envMesh.material.dispose();
     envMesh = null;
+  }
+  if (envGlow) {
+    scene.remove(envGlow);
+    envGlow.geometry.dispose();
+    envGlow.material.dispose();
+    envGlow = null;
   }
   envPos = null; envCol = null;
   $('envPoints').textContent = '0';
@@ -570,7 +687,7 @@ function recordEnvironmentVideo() {
 
   envChunks = [];
   const canvasStream = $('c3').captureStream(30);
-  const opts = { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 8000000 };
+  const opts = { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 8500000 };
   if (!MediaRecorder.isTypeSupported(opts.mimeType)) opts.mimeType = 'video/webm';
   envRecorder = new MediaRecorder(canvasStream, opts);
   envRecorder.ondataavailable = e => { if (e.data.size > 0) envChunks.push(e.data); };
@@ -582,7 +699,7 @@ function recordEnvironmentVideo() {
     if (envChunks.length) {
       const blob = new Blob(envChunks, { type: 'video/webm' });
       const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = `environment_share_${Date.now()}.webm`; a.click();
+      const a = document.createElement('a'); a.href = url; a.download = `holographic_world_${Date.now()}.webm`; a.click();
       URL.revokeObjectURL(url);
     }
   };
@@ -591,7 +708,8 @@ function recordEnvironmentVideo() {
   $('shareEnvBtn').textContent = 'Recording 12s…';
   $('shareEnvBtn').disabled = true;
   $('recInd').classList.add('on');
-  ctrl.autoRotate = true; ctrl.autoRotateSpeed = 1.1;
+  ctrl.autoRotate = true;
+  ctrl.autoRotateSpeed = 0.85;
   setTimeout(() => { if (envRecorder && envRecorder.state !== 'inactive') envRecorder.stop(); }, 12000);
 }
 
@@ -603,21 +721,7 @@ function uploadEnvironment(e) {
       const data = JSON.parse(ev.target.result);
       if (!data.positions || !data.colors) throw new Error('bad file');
       clearEnvironment();
-      envPos = new Float32Array(data.positions);
-      envCol = new Float32Array(data.colors);
-      const geo = new THREE.BufferGeometry();
-      geo.setAttribute('position', new THREE.BufferAttribute(envPos, 3));
-      geo.setAttribute('color', new THREE.BufferAttribute(envCol, 3));
-      envMesh = new THREE.Points(geo, new THREE.PointsMaterial({
-        size: 0.022, vertexColors: true, transparent: true,
-        opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false
-      }));
-      scene.add(envMesh);
-      $('envPoints').textContent = (envPos.length/3).toLocaleString();
-      $('clearEnvBtn').disabled = false;
-      $('saveEnvBtn').disabled = false;
-      $('shareEnvBtn').disabled = false;
-      cam.position.set(0, 0.7, 5.0); ctrl.target.set(0,0,0); ctrl.autoRotate = true;
+      finalizeEnvironment(Array.from(data.positions), Array.from(data.colors));
     } catch (err) { alert('Invalid environment file'); }
   };
   reader.readAsText(file); e.target.value = '';

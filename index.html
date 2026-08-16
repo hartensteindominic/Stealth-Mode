@@ -2,131 +2,144 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>HyperStream XD • v6.0</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>HyperStream</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:#020617;color:#f8fafc;font-family:system-ui,sans-serif;height:100vh;display:flex;overflow:hidden}
-#sidebar{width:370px;background:#030712;border-right:1px solid #1e293b;padding:12px;display:flex;flex-direction:column;gap:8px;overflow-y:auto;z-index:10}
-.card{background:#0f172a;border:1px solid #334155;border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:6px}
-.title{font-size:9px;font-weight:800;text-transform:uppercase;color:#94a3b8;letter-spacing:.4px}
-.row{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#cbd5e1}
-button{border:none;border-radius:6px;padding:8px;font-size:11px;font-weight:800;cursor:pointer;color:#fff}
-button:disabled{opacity:.38;cursor:not-allowed}
-.btn-p{background:linear-gradient(135deg,#8b5cf6,#ec4899)}
-.btn-g{background:linear-gradient(135deg,#10b981,#059669)}
-.btn-d{background:#ef4444}.btn-d.on{background:#f97316}
-.btn-b{background:#3b82f6}
-.btn-o{background:linear-gradient(135deg,#f59e0b,#d97706)}
-input[type=range]{accent-color:#ec4899;width:100px}
-input[type=file]{font-size:10px;color:#94a3b8}
-#viewer{flex:1;position:relative}
+:root{--bg:#0a0a0f;--card:#14141c;--border:#2a2a35;--text:#f5f5f7;--muted:#8e8e93;--accent:#0a84ff;--pink:#ff375f;--green:#30d158;--orange:#ff9f0a}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+#app{display:flex;flex:1;overflow:hidden}
+#sidebar{width:340px;background:var(--card);border-right:1px solid var(--border);padding:16px 14px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;flex-shrink:0}
+.header{font-size:20px;font-weight:700;letter-spacing:-0.3px;color:#fff}
+.sub{font-size:12px;color:var(--muted);margin-top:-6px}
+.card{background:#1c1c24;border:1px solid var(--border);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.title{font-size:11px;font-weight:600;text-transform:uppercase;color:var(--muted);letter-spacing:0.4px}
+.row{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#d1d1d6}
+button{border:none;border-radius:12px;padding:11px 12px;font-size:14px;font-weight:600;cursor:pointer;color:#fff;transition:opacity .15s;width:100%}
+button:disabled{opacity:0.35;cursor:not-allowed}
+.btn-p{background:linear-gradient(135deg,#bf5af2,#ff375f)}
+.btn-g{background:var(--green);color:#000}
+.btn-d{background:var(--pink)}
+.btn-d.on{background:var(--orange);color:#000}
+.btn-b{background:var(--accent)}
+.btn-o{background:var(--orange);color:#000}
+input[type=range]{accent-color:var(--pink);width:110px}
+input[type=file]{font-size:12px;color:var(--muted);width:100%}
+#viewer{flex:1;position:relative;background:#000}
 canvas{display:block;width:100%;height:100%}
-.stats{position:absolute;top:10px;right:10px;background:rgba(2,6,23,.85);padding:6px 12px;border-radius:6px;font-size:11px;color:#94a3b8;z-index:5;display:flex;gap:12px}
-.rec-indicator{display:none;align-items:center;gap:6px;color:#f87171;font-weight:700}
+.stats{position:absolute;top:12px;right:12px;background:rgba(0,0,0,0.55);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);padding:6px 12px;border-radius:20px;font-size:12px;color:#d1d1d6;z-index:5;display:flex;gap:10px;align-items:center}
+.rec-indicator{display:none;align-items:center;gap:5px;color:#ff453a;font-weight:600}
 .rec-indicator.on{display:flex}
-.rec-dot{width:8px;height:8px;background:#ef4444;border-radius:50%;animation:pulse 1s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.rec-dot{width:7px;height:7px;background:#ff453a;border-radius:50%;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 video{display:none}
-.small{font-size:10px;color:#64748b}
-.status-msg{font-size:10px;color:#38bdf8;min-height:14px}
+.status{font-size:12px;color:var(--accent);min-height:16px}
+@media(max-width:800px){
+  #app{flex-direction:column}
+  #sidebar{width:100%;max-height:42vh;border-right:none;border-bottom:1px solid var(--border);padding:12px}
+  .header{font-size:18px}
+}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body>
-<div id="sidebar">
-  <div style="font-size:13px;font-weight:900;color:#38bdf8">HYPERSTREAM XD • v6.0</div>
-  <div style="font-size:10px;color:#64748b;margin-bottom:2px">Holographic World Builder</div>
+<div id="app">
+  <div id="sidebar">
+    <div>
+      <div class="header">HyperStream</div>
+      <div class="sub">Holographic World Builder</div>
+    </div>
 
-  <div class="card">
-    <div class="title">Live Matrix Control</div>
-    <button class="btn-d" id="scanBtn" onclick="toggleScan()">ACTIVATE LIVE SCAN</button>
-    <div class="row"><span>Voxel Step</span><input type="range" min="1" max="5" value="2" oninput="stepSize=+this.value"></div>
-    <div class="row"><span>Depth Field</span><input type="range" min="30" max="200" value="110" oninput="depthMul=+this.value"></div>
-    <div class="row"><span>Active Voxels</span><b id="nLive" style="color:#ec4899">0</b></div>
+    <div class="card">
+      <div class="title">Live Scan</div>
+      <button class="btn-d" id="scanBtn" onclick="toggleScan()">Activate Live Scan</button>
+      <div class="row"><span>Detail</span><input type="range" min="1" max="5" value="2" oninput="stepSize=+this.value"></div>
+      <div class="row"><span>Depth</span><input type="range" min="40" max="200" value="115" oninput="depthMul=+this.value"></div>
+      <div class="row"><span>Voxels</span><b id="nLive" style="color:#ff375f">0</b></div>
+    </div>
+
+    <div class="card">
+      <div class="title">Recording</div>
+      <div class="row"><span>Status</span><b id="recStatus" style="color:var(--muted)">Idle</b></div>
+      <div class="row"><span>Time</span><b id="recTime">00:00</b></div>
+      <div class="row"><span>Frames</span><b id="frameCount" style="color:#bf5af2">0</b></div>
+      <button class="btn-g" id="recBtn" onclick="toggleRecord()">Start Recording</button>
+      <button class="btn-b" id="playBtn" onclick="togglePlayback()" disabled>Play Sequence</button>
+      <button class="btn-p" id="dlVideoBtn" onclick="downloadVideo()" disabled>Download Video</button>
+      <button class="btn-p" id="dlSeqBtn" onclick="exportSequence()" disabled>Export Sequence</button>
+    </div>
+
+    <div class="card">
+      <div class="title">Holographic World</div>
+      <div class="row"><span>Points</span><b id="envPoints" style="color:#30d158">0</b></div>
+      <div class="status" id="buildStatus"></div>
+      <button class="btn-p" id="buildSeqBtn" onclick="buildFromSequence()" disabled>Build from Sequence</button>
+      <button class="btn-o" id="buildVidBtn" onclick="buildFromVideo()" disabled>Build from Video</button>
+      <button class="btn-g" id="saveEnvBtn" onclick="saveEnvironment()" disabled>Save World</button>
+      <button class="btn-o" id="shareEnvBtn" onclick="recordEnvironmentVideo()" disabled>Share Video</button>
+      <button class="btn-d" id="clearEnvBtn" onclick="clearEnvironment()" disabled>Clear World</button>
+    </div>
+
+    <div class="card">
+      <div class="title">Upload</div>
+      <input type="file" id="uploadEnv" accept=".json" onchange="uploadEnvironment(event)">
+      <div class="small" style="font-size:11px;color:var(--muted)">World JSON</div>
+      <input type="file" id="uploadSeq" accept=".json" onchange="uploadSequence(event)">
+      <div class="small" style="font-size:11px;color:var(--muted)">Sequence JSON</div>
+      <input type="file" id="uploadVid" accept="video/*,.webm,.mp4" onchange="uploadVideo(event)">
+      <div class="small" style="font-size:11px;color:var(--muted)">Video file</div>
+    </div>
   </div>
 
-  <div class="card">
-    <div class="title">Holographic Recording</div>
-    <div class="row"><span>Status</span><b id="recStatus" style="color:#94a3b8">Idle</b></div>
-    <div class="row"><span>Duration</span><b id="recTime">00:00</b></div>
-    <div class="row"><span>3D Frames</span><b id="frameCount" style="color:#a78bfa">0</b></div>
-    <button class="btn-g" id="recBtn" onclick="toggleRecord()">● START RECORDING</button>
-    <button class="btn-b" id="playBtn" onclick="togglePlayback()" disabled>▶ PLAY 3D SEQUENCE</button>
-    <button class="btn-p" id="dlVideoBtn" onclick="downloadVideo()" disabled>Download Video (.webm)</button>
-    <button class="btn-p" id="dlSeqBtn" onclick="exportSequence()" disabled>Export 3D Sequence</button>
+  <div id="viewer">
+    <div class="stats">
+      <span>FPS <b id="fpsD" style="color:#ff375f">—</b></span>
+      <div class="rec-indicator" id="recInd"><div class="rec-dot"></div>REC</div>
+    </div>
+    <video id="vid" autoplay playsinline muted></video>
+    <canvas id="c3"></canvas>
   </div>
-
-  <div class="card">
-    <div class="title">Construct Holographic World</div>
-    <div class="row"><span>Environment Points</span><b id="envPoints" style="color:#34d399">0</b></div>
-    <div class="status-msg" id="buildStatus"></div>
-    <button class="btn-p" id="buildSeqBtn" onclick="buildFromSequence()" disabled>Build from Sequence</button>
-    <button class="btn-o" id="buildVidBtn" onclick="buildFromVideo()" disabled>Build from Recorded Video</button>
-    <button class="btn-g" id="saveEnvBtn" onclick="saveEnvironment()" disabled>Save Environment</button>
-    <button class="btn-o" id="shareEnvBtn" onclick="recordEnvironmentVideo()" disabled>Share Environment Video</button>
-    <button class="btn-d" id="clearEnvBtn" onclick="clearEnvironment()" disabled>Clear Environment</button>
-  </div>
-
-  <div class="card">
-    <div class="title">Upload</div>
-    <input type="file" id="uploadEnv" accept=".json" onchange="uploadEnvironment(event)">
-    <div class="small">Environment JSON</div>
-    <input type="file" id="uploadSeq" accept=".json" onchange="uploadSequence(event)">
-    <div class="small">3D Sequence JSON</div>
-    <input type="file" id="uploadVid" accept="video/*,.webm,.mp4" onchange="uploadVideo(event)">
-    <div class="small">Video file</div>
-  </div>
-</div>
-
-<div id="viewer">
-  <div class="stats">
-    <span>FPS <b id="fpsD" style="color:#ec4899">—</b></span>
-    <div class="rec-indicator" id="recInd"><div class="rec-dot"></div> REC</div>
-  </div>
-  <video id="vid" autoplay playsinline muted></video>
-  <canvas id="c3"></canvas>
 </div>
 
 <script>
 const $=id=>document.getElementById(id);
-let scene,cam,ren,ctrl,video,c2d,ctx,stream,ready=false,scanning=false;
-let stepSize=2,depthMul=110,fc=0,ft=0;
+let scene,cam,ren,ctrl,video,c2d,ctx,ready=false,scanning=false;
+let stepSize=2,depthMul=115,fc=0,ft=0;
 let recording=false,mediaRecorder,recordedChunks=[],recordedVideoBlob=null,sequenceFrames=[];
-let recStartTime=0,recTimer,lastCapture=0;
-const CAPTURE_MS=70;
-let playingBack=false,playIdx=0,playLast=0;
+let recStart=0,recTimer,lastCap=0;
+const CAP_MS=65;
+let playing=false,playIdx=0,playLast=0;
 const PLAY_FPS=12;
 let pointsMesh,posAttr,colAttr;
-const MAX_PTS=90000;
+const MAX=88000;
 let envMesh,envGlow,envPos,envCol;
-let envRecording=false,envRecorder,envChunks=[];
+let envRec=false,envRecorder,envChunks=[];
 
-window.addEventListener('DOMContentLoaded',()=>{init3();initCam();});
+window.addEventListener('DOMContentLoaded',()=>{init();initCam();});
 
-function init3(){
+function init(){
   const box=$('viewer');
   scene=new THREE.Scene();
-  scene.fog=new THREE.FogExp2(0x020617,0.014);
-  cam=new THREE.PerspectiveCamera(50,box.clientWidth/box.clientHeight,0.05,2000);
-  cam.position.set(0,1.35,5.1);
+  scene.fog=new THREE.FogExp2(0x0a0a0f,0.013);
+  cam=new THREE.PerspectiveCamera(52,box.clientWidth/box.clientHeight,0.05,2000);
+  cam.position.set(0,1.4,5.2);
   ren=new THREE.WebGLRenderer({canvas:$('c3'),antialias:true,powerPreference:'high-performance',preserveDrawingBuffer:true});
   ren.setSize(box.clientWidth,box.clientHeight);
   ren.setPixelRatio(Math.min(devicePixelRatio||1,2));
-  ren.setClearColor(0x020617);
+  ren.setClearColor(0x0a0a0f);
   ctrl=new THREE.OrbitControls(cam,ren.domElement);
-  ctrl.enableDamping=true;ctrl.autoRotate=true;ctrl.autoRotateSpeed=0.48;
-  ctrl.target.set(0,0.4,0);ctrl.minDistance=1.6;ctrl.maxDistance=14;
-  scene.add(new THREE.AmbientLight(0xffffff,0.82));
-  const key=new THREE.DirectionalLight(0xa5f3fc,0.38);key.position.set(2.5,5,3.5);scene.add(key);
+  ctrl.enableDamping=true;ctrl.autoRotate=true;ctrl.autoRotateSpeed=0.45;
+  ctrl.target.set(0,0.4,0);ctrl.minDistance=1.5;ctrl.maxDistance=14;
+  scene.add(new THREE.AmbientLight(0xffffff,0.85));
+  const key=new THREE.DirectionalLight(0xa5f3fc,0.35);key.position.set(2,5,3);scene.add(key);
 
   const geo=new THREE.BufferGeometry();
-  posAttr=new THREE.BufferAttribute(new Float32Array(MAX_PTS*3),3);
-  colAttr=new THREE.BufferAttribute(new Float32Array(MAX_PTS*3),3);
+  posAttr=new THREE.BufferAttribute(new Float32Array(MAX*3),3);
+  colAttr=new THREE.BufferAttribute(new Float32Array(MAX*3),3);
   geo.setAttribute('position',posAttr);geo.setAttribute('color',colAttr);geo.setDrawRange(0,0);
   pointsMesh=new THREE.Points(geo,new THREE.PointsMaterial({
-    size:0.0155,vertexColors:true,transparent:true,opacity:0.91,
+    size:0.015,vertexColors:true,transparent:true,opacity:0.92,
     blending:THREE.AdditiveBlending,depthWrite:false,sizeAttenuation:true
   }));
   scene.add(pointsMesh);
@@ -140,30 +153,27 @@ function init3(){
 
 function createRoom(){
   const g=new THREE.Group();
-  const grid=new THREE.GridHelper(9.5,30,0x1e40af,0x0f172a);
-  grid.position.y=-1.2;grid.material.opacity=0.36;grid.material.transparent=true;g.add(grid);
-  const floor=new THREE.Mesh(new THREE.PlaneGeometry(9.5,9.5),new THREE.MeshBasicMaterial({color:0x060e1c,transparent:true,opacity:0.4,side:THREE.DoubleSide}));
-  floor.rotation.x=-Math.PI/2;floor.position.y=-1.21;g.add(floor);
-  const frame=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(8.6,4.6,8.6)),new THREE.LineBasicMaterial({color:0x38bdf8,transparent:true,opacity:0.14}));
-  frame.position.y=1.0;g.add(frame);
-  const pMat=new THREE.MeshBasicMaterial({color:0x22d3ee,transparent:true,opacity:0.045});
-  const pGeo=new THREE.CylinderGeometry(0.022,0.022,4.4,6);
-  [[-3.9,1,-3.9],[3.9,1,-3.9],[-3.9,1,3.9],[3.9,1,3.9]].forEach(p=>{const m=new THREE.Mesh(pGeo,pMat);m.position.set(...p);g.add(m);});
+  const grid=new THREE.GridHelper(9.5,28,0x1e3a8a,0x111118);
+  grid.position.y=-1.25;grid.material.opacity=0.32;grid.material.transparent=true;g.add(grid);
+  const floor=new THREE.Mesh(new THREE.PlaneGeometry(9.5,9.5),new THREE.MeshBasicMaterial({color:0x0a0a12,transparent:true,opacity:0.45,side:THREE.DoubleSide}));
+  floor.rotation.x=-Math.PI/2;floor.position.y=-1.26;g.add(floor);
+  const frame=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(8.5,4.5,8.5)),new THREE.LineBasicMaterial({color:0x38bdf8,transparent:true,opacity:0.12}));
+  frame.position.y=0.95;g.add(frame);
   scene.add(g);
 }
 
 function initCam(){
   video=$('vid');c2d=document.createElement('canvas');ctx=c2d.getContext('2d',{willReadFrequently:true});
-  navigator.mediaDevices?.getUserMedia({video:{width:{ideal:640},height:{ideal:480},frameRate:{ideal:30}},audio:false})
-  .then(s=>{stream=s;video.srcObject=s;return video.play();}).then(()=>ready=true)
-  .catch(()=>{$('scanBtn').textContent='CAMERA BLOCKED';$('scanBtn').disabled=true;});
+  navigator.mediaDevices?.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:480}},audio:false})
+  .then(s=>{video.srcObject=s;return video.play();}).then(()=>ready=true)
+  .catch(()=>{$('scanBtn').textContent='Camera Blocked';$('scanBtn').disabled=true;});
 }
 
 function loop(now){
   if(scanning)ctrl.autoRotate=false;
   ctrl.update();
   fc++;if(now-ft>1000){$('fpsD').textContent=Math.round(fc*1000/(now-ft));fc=0;ft=now;}
-  if(playingBack)playbackStep(now);
+  if(playing)playbackStep(now);
   else if(scanning&&ready&&video.readyState>=2)sample(now);
   ren.render(scene,cam);
 }
@@ -174,19 +184,18 @@ function sample(now){
   try{ctx.drawImage(video,0,0,w,h);}catch{return;}
   let pix;try{pix=ctx.getImageData(0,0,w,h).data;}catch{return;}
   const step=Math.max(1,stepSize|0);let count=0;
-  for(let y=0;y<h&&count<MAX_PTS;y+=step){
-    for(let x=0;x<w&&count<MAX_PTS;x+=step){
+  for(let y=0;y<h&&count<MAX;y+=step){
+    for(let x=0;x<w&&count<MAX;x+=step){
       const i=(y*w+x)*4;
       const r=pix[i]/255,g=pix[i+1]/255,b=pix[i+2]/255;
       const lum=0.299*r+0.587*g+0.114*b;
-      if(lum<0.032)continue;
-      // stronger non-linear depth for better separation
-      const depth=Math.pow(1-lum,1.55);
+      if(lum<0.033)continue;
+      const depth=Math.pow(1-lum,1.58);
       const nx=((w-x)/w)*2-1,ny=-((y/h)*2-1);
-      const nz=(depth-0.38)*(depthMul*0.046);
+      const nz=(depth-0.37)*(depthMul*0.047);
       const idx=count*3;
-      posAttr.array[idx]=nx*1.75;
-      posAttr.array[idx+1]=ny*1.55+0.3;
+      posAttr.array[idx]=nx*1.78;
+      posAttr.array[idx+1]=ny*1.58+0.32;
       posAttr.array[idx+2]=nz;
       colAttr.array[idx]=r;colAttr.array[idx+1]=g;colAttr.array[idx+2]=b;
       count++;
@@ -195,10 +204,10 @@ function sample(now){
   posAttr.needsUpdate=true;colAttr.needsUpdate=true;
   pointsMesh.geometry.setDrawRange(0,count);
   $('nLive').textContent=count.toLocaleString();
-  if(recording&&now-lastCapture>=CAPTURE_MS){
-    lastCapture=now;
+  if(recording&&now-lastCap>=CAP_MS){
+    lastCap=now;
     sequenceFrames.push({
-      t:now-recStartTime,n:count,
+      t:now-recStart,n:count,
       pos:new Float32Array(posAttr.array.buffer.slice(0,count*12)),
       col:new Float32Array(colAttr.array.buffer.slice(0,count*12))
     });
@@ -209,20 +218,20 @@ function sample(now){
 function toggleScan(){
   scanning=!scanning;
   const b=$('scanBtn');
-  b.textContent=scanning?'STOP LIVE SCAN':'ACTIVATE LIVE SCAN';
+  b.textContent=scanning?'Stop Live Scan':'Activate Live Scan';
   b.classList.toggle('on',scanning);
   ctrl.autoRotate=false;
-  if(!scanning&&!playingBack){
+  if(!scanning&&!playing){
     pointsMesh.geometry.setDrawRange(0,0);$('nLive').textContent='0';
     ctrl.autoRotate=true;
   }
 }
 
-function toggleRecord(){recording?stopRecording():startRecording();}
-function startRecording(){
-  if(!scanning){alert('Activate Live Scan first.');return;}
-  recordedChunks=[];sequenceFrames=[];recordedVideoBlob=null;lastCapture=0;recStartTime=performance.now();
-  const opts={mimeType:'video/webm;codecs=vp9',videoBitsPerSecond:7000000};
+function toggleRecord(){recording?stopRec():startRec();}
+function startRec(){
+  if(!scanning){alert('Activate Live Scan first');return;}
+  recordedChunks=[];sequenceFrames=[];recordedVideoBlob=null;lastCap=0;recStart=performance.now();
+  const opts={mimeType:'video/webm;codecs=vp9',videoBitsPerSecond:7500000};
   if(!MediaRecorder.isTypeSupported(opts.mimeType))opts.mimeType='video/webm';
   mediaRecorder=new MediaRecorder($('c3').captureStream(30),opts);
   mediaRecorder.ondataavailable=e=>{if(e.data.size>0)recordedChunks.push(e.data);};
@@ -235,20 +244,20 @@ function startRecording(){
     $('buildVidBtn').disabled=!recordedVideoBlob;
   };
   mediaRecorder.start(100);recording=true;
-  $('recBtn').textContent='■ STOP RECORDING';$('recBtn').classList.replace('btn-g','btn-d');
-  $('recStatus').textContent='Recording…';$('recStatus').style.color='#f87171';$('recInd').classList.add('on');
-  $('frameCount').textContent='0';recTimer=setInterval(updateRecTimer,200);
+  $('recBtn').textContent='Stop Recording';$('recBtn').classList.replace('btn-g','btn-d');
+  $('recStatus').textContent='Recording';$('recStatus').style.color='#ff453a';$('recInd').classList.add('on');
+  $('frameCount').textContent='0';recTimer=setInterval(updateTimer,200);
 }
-function stopRecording(){
+function stopRec(){
   if(!recording)return;recording=false;
   if(mediaRecorder?.state!=='inactive')mediaRecorder.stop();
   clearInterval(recTimer);
-  $('recBtn').textContent='● START RECORDING';$('recBtn').classList.replace('btn-d','btn-g');
-  $('recStatus').textContent='Stopped';$('recStatus').style.color='#94a3b8';$('recInd').classList.remove('on');
+  $('recBtn').textContent='Start Recording';$('recBtn').classList.replace('btn-d','btn-g');
+  $('recStatus').textContent='Stopped';$('recStatus').style.color='var(--muted)';$('recInd').classList.remove('on');
 }
-function updateRecTimer(){
+function updateTimer(){
   if(!recording)return;
-  const e=(performance.now()-recStartTime)/1000;
+  const e=(performance.now()-recStart)/1000;
   $('recTime').textContent=String(Math.floor(e/60)).padStart(2,'0')+':'+String(Math.floor(e%60)).padStart(2,'0');
 }
 function downloadVideo(){
@@ -259,22 +268,22 @@ function downloadVideo(){
 }
 function exportSequence(){
   if(!sequenceFrames.length)return;
-  const payload={version:'HyperStreamXD-6.0',frames:sequenceFrames.map(f=>({t:Math.round(f.t),n:f.n,pos:Array.from(f.pos),col:Array.from(f.col)}))};
+  const payload={version:'HyperStream-7.0',frames:sequenceFrames.map(f=>({t:Math.round(f.t),n:f.n,pos:Array.from(f.pos),col:Array.from(f.col)}))};
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([JSON.stringify(payload)],{type:'application/json'}));
   a.download=`sequence_${Date.now()}.json`;a.click();
 }
-function togglePlayback(){playingBack?stopPlayback():startPlayback();}
-function startPlayback(){
+function togglePlayback(){playing?stopPlay():startPlay();}
+function startPlay(){
   if(!sequenceFrames.length)return;
   if(scanning)toggleScan();
-  playingBack=true;playIdx=0;playLast=performance.now();
-  $('playBtn').textContent='■ STOP PLAYBACK';$('recStatus').textContent='Playing Sequence';$('recStatus').style.color='#a78bfa';
+  playing=true;playIdx=0;playLast=performance.now();
+  $('playBtn').textContent='Stop Playback';$('recStatus').textContent='Playing';$('recStatus').style.color='#bf5af2';
   ctrl.autoRotate=true;
 }
-function stopPlayback(){
-  playingBack=false;$('playBtn').textContent='▶ PLAY 3D SEQUENCE';
-  $('recStatus').textContent='Idle';$('recStatus').style.color='#94a3b8';
+function stopPlay(){
+  playing=false;$('playBtn').textContent='Play Sequence';
+  $('recStatus').textContent='Idle';$('recStatus').style.color='var(--muted)';
   pointsMesh.geometry.setDrawRange(0,0);$('nLive').textContent='0';ctrl.autoRotate=!scanning;
 }
 function playbackStep(now){
@@ -287,100 +296,97 @@ function playbackStep(now){
   playIdx=(playIdx+1)%sequenceFrames.length;
 }
 
-/* ========== Holographic World Construction ========== */
-function finalizeEnvironment(posArr,colArr){
-  if(posArr.length<500){$('buildStatus').textContent='Not enough points. Record longer.';return;}
+function finalize(pos,col){
+  if(pos.length<600){$('buildStatus').textContent='Need more data — record longer';return;}
   if(envMesh){scene.remove(envMesh);envMesh.geometry.dispose();envMesh.material.dispose();}
   if(envGlow){scene.remove(envGlow);envGlow.geometry.dispose();envGlow.material.dispose();}
 
-  // Color grade that keeps detail and avoids pure white
-  for(let i=0;i<colArr.length;i+=3){
-    let r=colArr[i],g=colArr[i+1],b=colArr[i+2];
-    r=Math.min(1,r*0.84+0.07);g=Math.min(1,g*0.90+0.12);b=Math.min(1,b*0.80+0.26);
-    const c=1.12;
+  for(let i=0;i<col.length;i+=3){
+    let r=col[i],g=col[i+1],b=col[i+2];
+    r=Math.min(1,r*0.85+0.06);g=Math.min(1,g*0.91+0.11);b=Math.min(1,b*0.81+0.24);
+    const c=1.1;
     r=Math.min(1,(r-0.5)*c+0.5);g=Math.min(1,(g-0.5)*c+0.5);b=Math.min(1,(b-0.5)*c+0.5);
-    colArr[i]=r;colArr[i+1]=g;colArr[i+2]=b;
+    col[i]=r;col[i+1]=g;col[i+2]=b;
   }
 
-  envPos=new Float32Array(posArr);envCol=new Float32Array(colArr);
+  envPos=new Float32Array(pos);envCol=new Float32Array(col);
   const geo=new THREE.BufferGeometry();
   geo.setAttribute('position',new THREE.BufferAttribute(envPos,3));
   geo.setAttribute('color',new THREE.BufferAttribute(envCol,3));
 
   envMesh=new THREE.Points(geo,new THREE.PointsMaterial({
-    size:0.016,vertexColors:true,transparent:true,opacity:0.78,
+    size:0.0155,vertexColors:true,transparent:true,opacity:0.8,
     blending:THREE.AdditiveBlending,depthWrite:false,sizeAttenuation:true
   }));
-  envMesh.position.y=0.22;scene.add(envMesh);
+  envMesh.position.y=0.25;scene.add(envMesh);
 
   envGlow=new THREE.Points(geo.clone(),new THREE.PointsMaterial({
-    size:0.036,vertexColors:true,transparent:true,opacity:0.13,
+    size:0.034,vertexColors:true,transparent:true,opacity:0.11,
     blending:THREE.AdditiveBlending,depthWrite:false,sizeAttenuation:true
   }));
-  envGlow.position.y=0.22;scene.add(envGlow);
+  envGlow.position.y=0.25;scene.add(envGlow);
 
   $('envPoints').textContent=(envPos.length/3).toLocaleString();
   $('clearEnvBtn').disabled=false;$('saveEnvBtn').disabled=false;$('shareEnvBtn').disabled=false;
   $('buildSeqBtn').disabled=!sequenceFrames.length;$('buildVidBtn').disabled=!recordedVideoBlob;
-  $('buildStatus').textContent='Holographic world ready';
-  cam.position.set(0,1.55,5.6);ctrl.target.set(0,0.4,0);ctrl.autoRotate=true;
+  $('buildStatus').textContent='World ready';
+  cam.position.set(0,1.55,5.7);ctrl.target.set(0,0.4,0);ctrl.autoRotate=true;
 }
 
 function buildFromSequence(){
   if(!sequenceFrames.length)return;
-  if(playingBack)stopPlayback();
-  $('buildStatus').textContent='Building holographic world…';
-  const TARGET=125000;
-  const maxF=Math.min(sequenceFrames.length,60);
+  if(playing)stopPlay();
+  $('buildStatus').textContent='Building world…';
+  const TARGET=130000,maxF=Math.min(sequenceFrames.length,65);
   const step=Math.max(1,Math.floor(sequenceFrames.length/maxF));
-  const pos=[],col=[],spread=3.1;
+  const pos=[],col=[],spread=3.2;
   for(let fi=0;fi<sequenceFrames.length;fi+=step){
     const f=sequenceFrames[fi];
     const prog=fi/Math.max(1,sequenceFrames.length-1);
-    const zOff=(prog-0.5)*spread;
-    const keep=Math.min(1.0,(TARGET/sequenceFrames.length)/Math.max(1,f.n)*1.2);
+    const z=(prog-0.5)*spread;
+    const keep=Math.min(1,(TARGET/sequenceFrames.length)/Math.max(1,f.n)*1.25);
     for(let p=0;p<f.n;p++){
       if(Math.random()>keep)continue;
-      const i=p*3,j=0.009;
-      pos.push(f.pos[i]+(Math.random()-0.5)*j,f.pos[i+1]+(Math.random()-0.5)*j,f.pos[i+2]+zOff+(Math.random()-0.5)*j);
+      const i=p*3,j=0.008;
+      pos.push(f.pos[i]+(Math.random()-0.5)*j,f.pos[i+1]+(Math.random()-0.5)*j,f.pos[i+2]+z+(Math.random()-0.5)*j);
       col.push(f.col[i],f.col[i+1],f.col[i+2]);
       if(pos.length/3>=TARGET)break;
     }
     if(pos.length/3>=TARGET)break;
   }
-  finalizeEnvironment(pos,col);
+  finalize(pos,col);
 }
 
 function buildFromVideo(){
-  if(!recordedVideoBlob){alert('No recorded video.');return;}
-  if(playingBack)stopPlayback();
+  if(!recordedVideoBlob){alert('No video available');return;}
+  if(playing)stopPlay();
   $('buildStatus').textContent='Processing video…';$('buildVidBtn').disabled=true;
   const v=document.createElement('video');v.muted=true;v.playsInline=true;
   v.src=URL.createObjectURL(recordedVideoBlob);
   const c=document.createElement('canvas'),x=c.getContext('2d',{willReadFrequently:true});
   const frames=[];
   v.addEventListener('loadedmetadata',()=>{
-    const dur=v.duration||1;
-    const interval=0.095;let t=0;
+    const dur=Math.max(0.1,v.duration||1);
+    const interval=0.09;let t=0;
     function next(){
       if(t>dur){
         URL.revokeObjectURL(v.src);
-        const TARGET=125000,pos=[],col=[],spread=3.1;
-        const step=Math.max(1,Math.floor(frames.length/55));
+        const TARGET=130000,pos=[],col=[],spread=3.2;
+        const step=Math.max(1,Math.floor(frames.length/60));
         for(let i=0;i<frames.length;i+=step){
           const f=frames[i],prog=i/Math.max(1,frames.length-1);
-          const zOff=(prog-0.5)*spread;
-          const keep=Math.min(1.0,(TARGET/frames.length)/Math.max(1,f.n)*1.2);
+          const z=(prog-0.5)*spread;
+          const keep=Math.min(1,(TARGET/frames.length)/Math.max(1,f.n)*1.25);
           for(let p=0;p<f.n;p++){
             if(Math.random()>keep)continue;
-            const idx=p*3,j=0.009;
-            pos.push(f.pos[idx]+(Math.random()-0.5)*j,f.pos[idx+1]+(Math.random()-0.5)*j,f.pos[idx+2]+zOff+(Math.random()-0.5)*j);
+            const idx=p*3,j=0.008;
+            pos.push(f.pos[idx]+(Math.random()-0.5)*j,f.pos[idx+1]+(Math.random()-0.5)*j,f.pos[idx+2]+z+(Math.random()-0.5)*j);
             col.push(f.col[idx],f.col[idx+1],f.col[idx+2]);
             if(pos.length/3>=TARGET)break;
           }
           if(pos.length/3>=TARGET)break;
         }
-        finalizeEnvironment(pos,col);return;
+        finalize(pos,col);return;
       }
       v.currentTime=t;
     }
@@ -389,19 +395,19 @@ function buildFromVideo(){
       c.width=w;c.height=h;x.drawImage(v,0,0,w,h);
       let pix;try{pix=x.getImageData(0,0,w,h).data;}catch{t+=interval;next();return;}
       const step=Math.max(2,stepSize|0),p=[],cl=[];let cnt=0;
-      for(let y=0;y<h&&cnt<26000;y+=step){
-        for(let x2=0;x2<w&&cnt<26000;x2+=step){
-          const i=(y*w+x2)*4;
+      for(let y=0;y<h&&cnt<27000;y+=step){
+        for(let xx=0;xx<w&&cnt<27000;xx+=step){
+          const i=(y*w+xx)*4;
           const r=pix[i]/255,g=pix[i+1]/255,b=pix[i+2]/255;
           const lum=0.299*r+0.587*g+0.114*b;
           if(lum<0.034)continue;
-          const depth=Math.pow(1-lum,1.55);
-          const nx=((w-x2)/w)*2-1,ny=-((y/h)*2-1);
-          const nz=(depth-0.38)*(depthMul*0.046);
-          p.push(nx*1.75,ny*1.55+0.3,nz);cl.push(r,g,b);cnt++;
+          const depth=Math.pow(1-lum,1.58);
+          const nx=((w-xx)/w)*2-1,ny=-((y/h)*2-1);
+          const nz=(depth-0.37)*(depthMul*0.047);
+          p.push(nx*1.78,ny*1.58+0.32,nz);cl.push(r,g,b);cnt++;
         }
       }
-      if(cnt>50)frames.push({n:cnt,pos:new Float32Array(p),col:new Float32Array(cl)});
+      if(cnt>40)frames.push({n:cnt,pos:new Float32Array(p),col:new Float32Array(cl)});
       const pct=Math.min(100,Math.round((t/dur)*100));
       $('buildStatus').textContent=`Building… ${isFinite(pct)?pct:0}%`;
       t+=interval;next();
@@ -413,10 +419,10 @@ function buildFromVideo(){
 
 function saveEnvironment(){
   if(!envPos)return;
-  const payload={version:'HyperStreamXD-6.0',pointCount:envPos.length/3,positions:Array.from(envPos),colors:Array.from(envCol)};
+  const payload={version:'HyperStream-7.0',pointCount:envPos.length/3,positions:Array.from(envPos),colors:Array.from(envCol)};
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([JSON.stringify(payload)],{type:'application/json'}));
-  a.download=`holographic_world_${Date.now()}.json`;a.click();
+  a.download=`world_${Date.now()}.json`;a.click();
 }
 function clearEnvironment(){
   if(envMesh){scene.remove(envMesh);envMesh.geometry.dispose();envMesh.material.dispose();envMesh=null;}
@@ -427,24 +433,24 @@ function clearEnvironment(){
   $('buildStatus').textContent='';
 }
 function recordEnvironmentVideo(){
-  if(!envMesh||envRecording)return;
-  if(playingBack)stopPlayback();if(scanning)toggleScan();pointsMesh.geometry.setDrawRange(0,0);
+  if(!envMesh||envRec)return;
+  if(playing)stopPlay();if(scanning)toggleScan();pointsMesh.geometry.setDrawRange(0,0);
   envChunks=[];
   const opts={mimeType:'video/webm;codecs=vp9',videoBitsPerSecond:9000000};
   if(!MediaRecorder.isTypeSupported(opts.mimeType))opts.mimeType='video/webm';
   envRecorder=new MediaRecorder($('c3').captureStream(30),opts);
   envRecorder.ondataavailable=e=>{if(e.data.size>0)envChunks.push(e.data);};
   envRecorder.onstop=()=>{
-    envRecording=false;$('shareEnvBtn').textContent='Share Environment Video';$('shareEnvBtn').disabled=false;$('recInd').classList.remove('on');
+    envRec=false;$('shareEnvBtn').textContent='Share Video';$('shareEnvBtn').disabled=false;$('recInd').classList.remove('on');
     if(envChunks.length){
       const a=document.createElement('a');
       a.href=URL.createObjectURL(new Blob(envChunks,{type:'video/webm'}));
-      a.download=`holographic_world_${Date.now()}.webm`;a.click();
+      a.download=`world_${Date.now()}.webm`;a.click();
     }
   };
-  envRecorder.start(100);envRecording=true;
+  envRecorder.start(100);envRec=true;
   $('shareEnvBtn').textContent='Recording 12s…';$('shareEnvBtn').disabled=true;$('recInd').classList.add('on');
-  ctrl.autoRotate=true;ctrl.autoRotateSpeed=0.8;
+  ctrl.autoRotate=true;ctrl.autoRotateSpeed=0.75;
   setTimeout(()=>{if(envRecorder?.state!=='inactive')envRecorder.stop();},12000);
 }
 
@@ -454,8 +460,8 @@ function uploadEnvironment(e){
   r.onload=ev=>{try{
     const d=JSON.parse(ev.target.result);
     if(!d.positions||!d.colors)throw 0;
-    clearEnvironment();finalizeEnvironment(Array.from(d.positions),Array.from(d.colors));
-  }catch{alert('Invalid environment file');}};
+    clearEnvironment();finalize(Array.from(d.positions),Array.from(d.colors));
+  }catch{alert('Invalid file');}};
   r.readAsText(f);e.target.value='';
 }
 function uploadSequence(e){
@@ -467,12 +473,12 @@ function uploadSequence(e){
     $('frameCount').textContent=sequenceFrames.length;
     $('playBtn').disabled=false;$('dlSeqBtn').disabled=false;$('buildSeqBtn').disabled=false;
     alert(`Loaded ${sequenceFrames.length} frames`);
-  }catch{alert('Invalid sequence file');}};
+  }catch{alert('Invalid file');}};
   r.readAsText(f);e.target.value='';
 }
 function uploadVideo(e){
   const f=e.target.files[0];if(!f)return;
-  recordedVideoBlob=f;$('buildVidBtn').disabled=false;$('buildStatus').textContent='Video loaded – ready to build';
+  recordedVideoBlob=f;$('buildVidBtn').disabled=false;$('buildStatus').textContent='Video ready';
   e.target.value='';
 }
 </script>
